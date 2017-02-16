@@ -47,7 +47,7 @@ var board;
 
 // Function to create tiles
 var tileFactory = function (row, column) {
-
+  var board = game.currentLevel.board;
   // create tile element
   var $tile = $('<div class="game-tile">');
 
@@ -140,9 +140,6 @@ var tileFactory = function (row, column) {
         }
         // add class to display value's styling
         $(this).addClass(`active-${this.value} active`);
-      } else if (this.marked) {
-        $(this).text('*');
-        $(this).addClass('marked');
       }
     },
 
@@ -150,15 +147,18 @@ var tileFactory = function (row, column) {
     toggleMarked: function () {
       // set marked to not marked
       this.marked = !this.marked;
-      // add to bomb guesses
-      board.bombGuesses++;
-      // render tile
-      this.render();
+      // add or remove from bomb guesses
+      if (this.marked) {
+        board.bombGuesses++;
+      } else {
+        board.bombGuesses--;
+      }
+      $(this).toggleClass('marked');
+
     }
 
 
   }
-
 
 
   // set the tile prototype to the tile element
@@ -199,7 +199,7 @@ var tileFactory = function (row, column) {
 var boardFactory = function (rows, columns, bombs) {
 
   // get game board element
-  var $board = $('#game-board');
+  var $board = $('<div id="game-board" class="game-board">');
 
   // create board object
   var board = {
@@ -243,47 +243,58 @@ var boardFactory = function (rows, columns, bombs) {
       // after a pause, activate the first tile
       setTimeout(function () {
         board.firstTile.activate();
+        game.currentLevel.timer.start();
       }, 100);
 
     },
 
     // function to generate bombs
     generateBombs: function (firstTile) {
-      //
+      this.firstTile = firstTile;
 
+      // create new array of tiles excluding the first tile
       var randomTiles = this.tiles.filter(function (tile) {
         return !(tile.row === firstTile.row && tile.column === firstTile.column);
       });
+      // sort tiles randomly
       randomTiles.sort(function (a, b) {
         return .5 - Math.random();
       });
+      // assign bombs
       for (var i = 0; i < this.bombAmount; i++) {
         this.getTile(randomTiles[i].row, randomTiles[i].column).value = '';
       }
-      this.firstTile = firstTile;
+      // assign values
       this.assignValues();
     },
 
+
+    // function to clear the game board
     clear: function () {
       $(this).children().remove();
     },
 
+    // function to size / resize the game board
     size: function () {
+      // get vph and vpw
       var vpw = $(window).innerWidth();
       var vph = $(window).innerHeight();
 
+      // get size of each tile
       var size = (vpw / this.columnAmount) > (vph / this.rowAmount) ? ((vph / 10) * 8) / this.rowAmount : ((vpw / 10) * 8) / this.columnAmount;
 
+      //set size of board
       $(this).width(size * this.columnAmount).height(size * this.rowAmount);
+
+      // set size of tiles
       this.tiles.forEach(function (tile) {
         $(tile).width(size).height(size);
       });
 
     },
 
+    // function to generate tiles
     generateTiles: function () {
-
-      console.log(this);
       for (var row = 0; row < this.rowAmount; row++) {
         for (var col = 0; col < this.columnAmount; col++) {
           var tile = tileFactory(row, col);
@@ -292,8 +303,6 @@ var boardFactory = function (rows, columns, bombs) {
       }
       this.size();
     }
-
-
 
   }
   board.__proto__ = $board;
@@ -304,17 +313,136 @@ var boardFactory = function (rows, columns, bombs) {
 
 
 
-function Level() {
+function Level(rows, cols, bombs) {
+  this.rows = rows;
+  this.columns = cols;
+  this.bombs = bombs;
+  this.board = boardFactory(rows, cols, bombs);
+  this.highScore = 0;
+  this.timer = new Timer();
 
+
+  this.renderLevel = function () {
+    var self = this;
+    $('.levels').slideUp('slow', function () {
+      console.log(self.board);
+      $('.sub-head').text()
+      $('.container').append(self.board);
+      self.board.generateTiles();
+    });
+  }
+}
+
+function Timer() {
+  this.time = 0;
+  this.running = false;
+  this.interval;
+
+  this.start = function () {
+    if (!this.running) {
+      var self = this;
+      this.running = true;
+
+      this.interval = setInterval(function () {
+        self.increment();
+        self.render();
+      }, 100)
+    }
+  };
+  this.render = function () {
+    $('#timer').text(this.getFormatted());
+  }
+
+  this.pause = function () {
+    this.running = false;
+    window.clearInterval(this.intervalID);
+  };
+  this.reset = function () {
+
+  }
+  this.increment = function () {
+    if (this.running) {
+      this.time += .1;
+    }
+  }
+  this.getFormatted = function () {
+    var seconds = Math.floor(this.time);
+    var minutes = Math.floor(seconds / 60);
+    seconds = seconds % 60;
+    if (seconds.toString().length === 1) {
+      seconds = '0' + seconds;
+    }
+    return minutes + ':' + seconds;
+  }
+}
+
+var game = {
+  levels: [
+    new Level(10, 15, 20),
+    new Level(12, 15, 30),
+    new Level(15, 17, 35),
+    new Level(18, 20, 40)
+
+  ],
+  playerName: '',
+
+  currentLevel: 0,
+
+  generateLevelChoice: function () {
+    var $levels = $('.levels');
+    var $levelHolder;
+    var $levelContainer;
+    var $level;
+    var $score;
+    var self = this;
+    this.levels.forEach(function (level, i) {
+
+      $('.sub-head').text(self.playerName);
+      $levelHolder = $('<div class="level-holder">');
+      $levelContainer = $('<div class="level-container">');
+
+      $level = $('<h4 class="level">');
+      $level.text(i + 1);
+      $levelContainer.append($level);
+      $levelContainer.click(function () {
+        self.currentLevel = level;
+        level.renderLevel();
+      });
+
+      if (level.highScore > 0) {
+        $score = $('<p class="score">');
+        $score.text(level.highScore);
+        $levelContainer.append($score);
+      }
+
+      $levelHolder.append($levelContainer);
+
+      $levels.append($levelHolder);
+    })
+  },
+  save: function () {
+
+  },
+  loadSave: function () {
+
+  },
+
+  size: function () {
+    if (this.currentLevel) {
+      this.currentLevel.board.size();
+    }
+  }
 }
 
 $(function () {
+  //  board = boardFactory(10, 15, 20);
+  //  board.generateTiles();
+  //$('.container').append($(board));
 
-  board = boardFactory(10, 15, 20);
-  board.generateTiles();
+  game.generateLevelChoice();
 
   $(window).resize(function () {
-    board.size();
+    game.size();
   });
   console.log(board);
 

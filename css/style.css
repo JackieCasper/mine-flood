@@ -3,6 +3,52 @@ html {
   width: 100%;
   height: 100%;
   margin: 0 auto;
+  font-family: sans-serif;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.levels {
+  display: flex;
+  flex-flow: row wrap;
+  width: 100%;
+  max-width: 800px;
+  justify-content: center;
+}
+
+.level-holder {
+  width: 150px;
+  height: 150px;
+  padding: 5px;
+}
+
+.level-container {
+  width: 100%;
+  height: 100%;
+  background-color: #555;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h4.level {
+  margin: 0 auto;
+  color: white;
+  font-size: 50px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+p.score {
+  margin: 0 auto;
 }
 
 #game-board {
@@ -52,6 +98,10 @@ html {
 
 .active-4 {
   background-color: #666;
+}
+
+.marked {
+  background-color: yellow;
 }
 
 .active-5 {
