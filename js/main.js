@@ -154,77 +154,117 @@ var tileFactory = function (row, column) {
       } else {
         board.bombGuesses--;
       }
+      // toggle marked class
       $(this).toggleClass('marked');
+      // change counter text
       $('#counter').text(`Mines: ${board.bombGuesses}/${board.bombAmount}`);
     },
+
+    // function to get adjacent tiles -- for color flow
     getAdjacent: function () {
       var self = this;
+      // return an array of tiles filtered to only include the tiles directly next to this tile
       return board.tiles.filter(function (tile) {
         return ((tile.column === self.column - 1 || tile.column === self.column + 1) && tile.row === self.row) || (tile.column === self.column && (tile.row === self.row + 1 || tile.row === self.row - 1));
       });
     },
 
+    // function to handle color flow moves
     flow: function (changeColor) {
+      // define vars
       var self = this;
+      var groupedArray;
+
+      // set tile's color
       this.color = changeColor;
       $(this).css('background-color', this.color);
 
-      var groupedArray = this.getAdjacent().filter(function (adjTile) {
+      // check surrounding tiles and look for groups of colors
+      // get surrounding tiles
+      groupedArray = this.getAdjacent().filter(function (adjTile) {
         return self.color === adjTile.color && !adjTile.activated;
       });
 
+      // while there are still tiles in the array
       while (groupedArray.length > 0) {
+        // get the first tile
         var groupTile = groupedArray[0];
+        // check adjacent tiles for tiles of the same color
         groupTile.getAdjacent().filter(function (adjTile) {
           return groupTile.color === adjTile.color && !adjTile.activated;
         }).forEach(function (adjTile) {
+          // add to group array
           groupedArray.push(adjTile);
+          // activate tile
           adjTile.activated = true;
         });
+
+        // add all tiles of the same color to the active color flow tiles
         game.currentLevel.board.flowTiles.push(groupTile);
+        // make sure its activated
         groupTile.activated = true;
+        // take it out of the group array
         groupedArray.shift();
       }
     },
+
+    // function to init tile for color flow
     turnColorFlow: function (i) {
+      // define vars
       var self = this;
+      var adjTiles = this.getAdjacent();
+      var colors;
+      var sameColor;
+
+      // set tile to random color
       this.color = game.colors[Math.floor(Math.random() * game.colors.length)];
 
-      var adjTiles = this.getAdjacent();
-      var colors = game.colors.filter(function (color) {
+      // get colors that aren't this tile's color
+      colors = game.colors.filter(function (color) {
         return color !== self.color;
       });
 
+      // check for groups of tiles, to make sure there aren't huge sections of the same color
       while (colors.length > 0) {
-        var sameColor = adjTiles.filter(function (adjTile) {
+        // get adjacent tiles with the same color
+        sameColor = adjTiles.filter(function (adjTile) {
           return adjTile.color === self.color;
         });
+
+        // if there are tiles next to this tile of the same color, and a bit of randomness to allow for some groups, but not too many
         if (sameColor.length > 0 && Math.round(Math.random() - .3) <= 0) {
+          // change to a new color
           tile.color = colors[Math.floor(Math.random() * colors.length)];
+          // take out that color from the color array
           colors = colors.filter(function (color) {
             return color !== self.color;
           });
+          // if there are no adjacent tiles of the same color
         } else {
+          // clear out color array to end loop
           colors = [];
         }
       }
 
+      // set a timeout to change tiles one by one
       setTimeout(function () {
+        // change the background color
         $(self).css('background-color', self.color);
+        // remove classes that have to do with mine sweeper
         $(self).removeClass(`marked active active-${self.value}`).addClass('color-flow');
+        // remove text
         $(self).text('');
       }, 5 * i);
 
+      // make sure tile isn't activated
       this.activated = false;
 
+      // make sure tile isn't marked
       this.marked = false;
 
-
-
+      // take out click events
       $(this).unbind('click contextmenu');
     }
-
-
   }
 
 
@@ -246,6 +286,7 @@ var tileFactory = function (row, column) {
 
   // add click event handler 
   $(tile).click(function () {
+    // if not currently marking
     if (!board.marking) {
       // if it is the first tile clicked
       if (!board.valuesAssigned) {
@@ -256,7 +297,9 @@ var tileFactory = function (row, column) {
         // activate tiles
         tile.activate();
       }
+      // if currently marking
     } else {
+      // mark tile
       tile.toggleMarked();
     }
   })
@@ -287,39 +330,55 @@ var boardFactory = function (rows, columns, bombs) {
     flow: false,
     marking: false,
 
+    // function to toggle if player is currently marking a tile
     toggleMarking: function () {
       this.marking = !this.marking;
       $('#mark-flag').toggleClass('marking');
     },
 
-    // define board methods
+    // handle game loss
     handleLoss: function () {
+      // pause timer
       game.currentLevel.timer.pause;
       alert('You Lose');
+      // go back to level choice
       game.generateLevelChoice();
     },
 
+    // function used to skip the playing process for minesweeper
     // used for development
     triggerWin() {
+      // basically click each tile that isn't a bomb
       this.tiles.forEach(function (tile) {
         if (!tile.activated && tile.value !== '') {
           $(tile).click();
         }
       });
     },
-    handleWin: function () {
-      if (this.flow) {
 
-        game.currentLevel.timer.pause;
+    // function to handle a win
+    handleWin: function () {
+      // if it is color flow
+      if (this.flow) {
         var winString = 'You Win! '
+          // pause the game
+        game.currentLevel.timer.pause;
+
+        // if it is a high score
         if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
+          // add to win string
           winString += 'New Record! ';
+          // set high score
           game.currentLevel.highScore = game.currentLevel.timer.time;
+          // save high score
           game.save();
         }
         alert(winString + game.currentLevel.timer.getFormatted());
+        // go back to level choice
         game.generateLevelChoice();
+        // if its not color flow
       } else {
+        // turn into color flow
         game.currentLevel.turnColorFlow();
       }
 
@@ -346,6 +405,7 @@ var boardFactory = function (rows, columns, bombs) {
       // after a pause, activate the first tile
       setTimeout(function () {
         board.firstTile.activate();
+        // start the timer
         game.currentLevel.timer.start();
       }, 100);
 
@@ -353,26 +413,36 @@ var boardFactory = function (rows, columns, bombs) {
 
     // function to generate bombs
     generateBombs: function (firstTile) {
+      // define vars
       var surrounding = [];
-      this.firstTile = firstTile;
       var randomTiles = this.tiles;
 
+      // set board's first tile
+      this.firstTile = firstTile;
+
+      // get first tile's surrounding tiles - to make sure the first click is an empty spot
       surrounding = firstTile.getSurrounding();
+      // add the first tile to the surrounding ones
       surrounding.push(firstTile);
 
+      // for each surrounding tile
       surrounding.forEach(function (surroundingTile) {
+        // take it out of the random tile array
         randomTiles = randomTiles.filter(function (tile) {
           return !(tile.row === surroundingTile.row && tile.column === surroundingTile.column);
         });
       })
 
+      // sort the tiles randomly
       randomTiles.sort(function (a, b) {
         return .5 - Math.random();
       });
+
       // assign bombs
       for (var i = 0; i < this.bombAmount; i++) {
         this.getTile(randomTiles[i].row, randomTiles[i].column).value = '';
       }
+
       // assign values
       this.assignValues();
     },
@@ -380,13 +450,19 @@ var boardFactory = function (rows, columns, bombs) {
 
     // function to clear the game board
     clear: function () {
+      // remove tiles from board
       $(this).children().remove();
+      // clear activated tiles, bomb guesses, tiles, values assigned
       this.activatedTiles = 0;
       this.bombGuesses = 0;
       this.tiles = [];
       this.valuesAssigned = false;
-      game.currentLevel.timer.pause();
+
+      // reset timer
       game.currentLevel.timer.reset();
+
+      // hide color choices
+      $('.color-choice').hide();
     },
 
     // function to size / resize the game board
@@ -395,12 +471,16 @@ var boardFactory = function (rows, columns, bombs) {
       var vpw = $(window).innerWidth();
       var vph = $(window).innerHeight();
       var cols = this.columnAmount;
+
+      // if it isn't a change of size
       if (firstTime) {
+        // orient the board to best fit screen
         if (vpw / this.columnAmount < vph / this.rowAmount) {
           this.columnAmount = this.rowAmount;
           this.rowAmount = cols;
-
         }
+
+        // generate tiles
         this.generateTiles();
       }
 
@@ -415,30 +495,32 @@ var boardFactory = function (rows, columns, bombs) {
       this.tiles.forEach(function (tile) {
         $(tile).width(size).height(size);
       });
-
-
     },
 
     // function to generate tiles
     generateTiles: function () {
+      // for each tile spot
       for (var row = 0; row < this.rowAmount; row++) {
         for (var col = 0; col < this.columnAmount; col++) {
+          // create tile
           var tile = tileFactory(row, col);
+          // add it to board's tiles
           this.tiles.push(tile);
         }
       }
+
+      // slide down board
       setTimeout(function () {
         $(board).slideDown();
       }, 100);
+
+      // set mine counter
       $('#counter').text(`Mines: 0/${this.bombAmount}`);
-
     },
-
-
   }
 
 
-
+  // set board's proto to jquery element
   board.__proto__ = $board;
 
 
@@ -446,11 +528,13 @@ var boardFactory = function (rows, columns, bombs) {
 }
 
 
-
+// constructor for Level
 function Level(index, rows, cols, bombs) {
+  // define level vars
   this.rows = rows;
   this.columns = cols;
   this.bombs = bombs;
+  // create board
   this.board = boardFactory(rows, cols, bombs);
   this.highScore = 0;
   this.timer = new Timer();
@@ -458,119 +542,176 @@ function Level(index, rows, cols, bombs) {
   this.playing = false;
 
 
+  // function to render the level
   this.renderLevel = function () {
     var self = this;
+    // hide the level choices
     $('.levels').slideUp('slow', function () {
+      // change the subhead text to the current level
       $('.sub-head').text('Level: ' + (self.index + 1));
+      // hide the board now so it can slide down later
       $(self.board).hide();
+      // append the board to the container
       $('.container').append(self.board);
+      // set the timer text
       $('#timer').text('0:00').show();
+      // size the board for the first time
       self.board.size(true);
     });
+    // set the board to the current board
     board = this.board;
+    // slide the game controls down
     $('.game-controls').slideDown('fast');
   }
 
+  // function to turn level to color flow
   this.turnColorFlow = function () {
-
-    this.board.flow = true;
-    // turn all tiles colors
     var self = this;
-    this.board.flowTiles = [];
+    var firstTile = self.board.getTile(0, 0);
+    var firstColor = firstTile.color;
+    var $colorChoices = $('.color-choice');
+    var colors;
+    var changeColor;
+    var lastColor;
 
+    // clear out flow tiles
+    this.board.flowTiles = [];
+    // set flow equal to true
+    this.board.flow = true;
+    // for each tile on the board
     this.board.tiles.forEach(function (tile, i) {
+      // turn it to color flow
       tile.turnColorFlow(i);
     });
 
-
-    var firstTile = self.board.getTile(0, 0);
-    var firstColor = firstTile.color;
+    // add first tile to flow tiles
     self.board.flowTiles.push(firstTile);
+    // activate first tile
     firstTile.activated = true;
+    // make sure any tiles next to it that are the same color are also set as active
     firstTile.flow(firstColor);
 
 
-
-    var colorChoices = $('.color-choice');
-
+    // filter colors to not include the first color
     colors = game.colors.filter(function (color) {
       return color !== firstColor;
     });
 
+    // for each of the color choices
+    $colorChoices.each(function (i, $colorChoice) {
+      // unbind click - to handle having played previous gamess
+      $($colorChoice).unbind('click');
 
-    colorChoices.each(function (i, colorChoice) {
-      $(colorChoice).unbind('click');
+      // change the background color to one of the colors that isn't the first color
+      $($colorChoice).css('background-color', colors[i]);
 
-      $(colorChoice).css('background-color', colors[i]);
-      $(colorChoice).click(function () {
+      // add click event
+      $($colorChoice).click(function () {
+        // get color of clicked 
+        changeColor = $(this).css('background-color');
+        // get last clicked color
+        lastColor = board.getTile(0, 0).color;
 
-        var changeColor = $(this).css('background-color');
-        var lastColor = board.getTile(0, 0).color;
-
+        // for each of the tiles active in color flow
         board.flowTiles.forEach(function (tile) {
+          // handle the flow
           tile.flow(changeColor);
-
         });
+
+        // change clicked to the last color
         $(this).css('background-color', lastColor);
+
+        // if all the tiles are active
         if (board.flowTiles.length === self.board.tiles.length) {
+          // handle win
           board.handleWin();
         }
-
       });
-      $(colorChoice).fadeIn('fast');
+      // fade in the color choices
+      $($colorChoice).fadeIn('fast');
     });
-
   }
-
-}
-
+} // close level constructor
 
 
+// timer constructor - a lot of it used from Tims' lesson
 function Timer() {
+  // define vars
   this.time = 0;
   this.running = false;
   this.interval;
 
+  // function to start the timer
   this.start = function () {
+    // if its not running
     if (!this.running) {
       var self = this;
+      // set it to running
       this.running = true;
-
+      // set interval 
       this.interval = setInterval(function () {
+        // increment the timer
         self.increment();
+        // render the timer
         self.render();
       }, 100)
     }
   };
+
+  // function to render the timer
   this.render = function () {
+    // set timer text to formatted time
     $('#timer').text(this.getFormatted());
   }
 
+  // function to pause the timer
   this.pause = function () {
+    // make it not running
     this.running = false;
+    // clear the interval
     window.clearInterval(this.interval);
   };
+
+  // function to reset the timer
   this.reset = function () {
+    // pause the timer
     this.pause();
+    // set the time to 0
     this.time = 0;
   }
+
+  // function to increment timer
   this.increment = function () {
+    // if it is running
     if (this.running) {
+      // add timer
       this.time += .1;
     }
   }
+
+  // function to get the formatted timer
   this.getFormatted = function () {
+    // get seconds
     var seconds = Math.floor(this.time);
+    // change to minutes
     var minutes = Math.floor(seconds / 60);
+    // get remaining seconds
     seconds = seconds % 60;
+
+    // format to include 0 if in single digets
     if (seconds.toString().length === 1) {
       seconds = '0' + seconds;
     }
+
+    // return with :
     return minutes + ':' + seconds;
   }
 }
 
+// define game object
 var game = {
+
+  // level options
   levels: [
     new Level(0, 9, 9, 15),
     new Level(1, 10, 15, 25),
@@ -579,12 +720,51 @@ var game = {
     new Level(4, 15, 17, 45),
     new Level(5, 18, 20, 55)
   ],
+
+  // colors
   colors: ['rgb(241, 103, 72)', 'rgb(140, 198, 63)', 'rgb(0, 169, 157)', 'rgb(249, 161, 56)', 'rgb(49, 212, 224)', 'rgb(251, 209, 59)'],
+
+  // player name
   playerName: '',
 
   currentLevel: 0,
 
+  // function to check the custom game inputs and format them correctly / make sure it is valid
+  checkCustomInput: function ($input) {
+    // get the value of the input
+    var val = Math.round(parseFloat($input.val()));
+    // get the minimum of the input
+    var min = parseInt($input.attr('min'));
+
+    // if the value is less than 0
+    if (val < 0) {
+      // make it positive
+      val = val * -1;
+    }
+
+    // if the value is less than the min
+    if (val < min) {
+      // make it the min
+      val = min;
+    }
+
+    // set the value 
+    $input.val(val);
+  },
+
+  // function to create a custom level
+  createCustomLevel: function (rows, cols, mines) {
+    // set the current level to a new level
+    this.currentLevel = new Level('Custom', rows, cols, mines);
+    // render the level
+    this.currentLevel.renderLevel();
+
+  },
+
+  // function to generate level choices
+  // also cleans up previous games
   generateLevelChoice: function () {
+    // define vars
     var $levels = $('.levels');
     var $levelHolder;
     var $levelContainer;
@@ -592,107 +772,177 @@ var game = {
     var $score;
     var self = this;
     var colorIndex = 0;
+
+    // define custom level vars
     var $customLevelControls = $('.custom-level-container');
+    var $customRows = $('#custom-rows');
+    var $customColumns = $('#custom-columns');
+    var $customMines = $('#custom-mines');
+    var $customSubmit = $('#custom-level-submit');
+
+    var customInputs = [$customRows, $customColumns, $customMines];
+
+    // hide the game controls and color choices
     $('.game-controls').hide();
-
-
-
     $('.color-choice').hide();
 
+    // remove all the children
     $levels.children().remove();
+
+    // if there is a current level
     if (this.currentLevel) {
+      // reset the timer
       this.currentLevel.timer.reset();
+      // remove the board
       $(this.currentLevel.board).remove();
+      // clear the board
       this.currentLevel.board.clear();
+      // clear the current level
       this.currentLevel = 0;
-      $('#timer').hide();
     }
 
-    this.levels.forEach(function (level, i) {
+    // set the sub-head to the player's name
+    $('.sub-head').text(self.playerName);
 
-      $('.sub-head').text(self.playerName);
+    // for each level
+    this.levels.forEach(function (level, i) {
+      // create level holder
       $levelHolder = $('<div class="level-holder">');
+      // create level container
       $levelContainer = $('<div class="level-container">');
 
+      // create level index
       $level = $('<h4 class="level">');
       $level.text(i + 1);
       $levelContainer.append($level);
+      // add event listener for when level is clicked
       $levelContainer.click(function () {
+        // set the current level
         self.currentLevel = level;
+        // render the current level
         level.renderLevel();
       });
 
+      // set the background colors to match color flow tiles
       $levelContainer.css('background-color', self.colors[colorIndex]);
 
+      // incriment color index, loop to begining at the end
       if (colorIndex === self.colors.length - 1) {
         colorIndex = 0;
       } else {
         colorIndex++;
       }
 
-
+      // if there is a high score
       if (level.highScore > 0) {
-        var seconds = Math.floor(level.highScore);
-        var minutes = Math.floor(seconds / 60);
-
+        // create score element
         $score = $('<p class="score">');
 
+        // format to seconds and minutes
+        var seconds = Math.floor(level.highScore);
+        var minutes = Math.floor(seconds / 60);
         seconds = seconds % 60;
         if (seconds.toString().length === 1) {
           seconds = '0' + seconds;
         }
+
+        // set element's text to formatted time
         $score.text(minutes + ':' + seconds);
+        // add it to the level container
         $levelContainer.append($score);
       }
 
+      // add container to holder
       $levelHolder.append($levelContainer);
 
+      // and holder to levels
       $levels.append($levelHolder);
-
-
-
     });
+
+    // add custom level options to the levels
     $levels.append($customLevelControls);
+
+    // for each custom input
+    customInputs.forEach(function ($input) {
+      // unbind change to account for previous bindings
+      $input.unbind('change');
+      // on change
+      $input.change(function () {
+        // check the input
+        self.checkCustomInput($input);
+      });
+    });
+
+    // unbind the click to account for previous bindings
+    $customSubmit.unbind('click');
+    // on click
+    $customSubmit.click(function () {
+      // for each input
+      customInputs.forEach(function ($input) {
+        // check the input value
+        self.checkCustomInput($input);
+      });
+      // create custom level
+      self.createCustomLevel($customRows.val(), $customColumns.val(), $customMines.val());
+    });
+
+    // slide the levels down
     $levels.slideDown('fast');
 
   },
+
+  // function to clear high scores - used for development
   clearHighScores: function () {
+    // for each level
     this.levels.forEach(function (level) {
+      // set the score to zero
       level.highScore = 0;
     });
+    // save the scores
     this.save();
   },
 
+  // function to save the high scores
   save: function () {
+    // create an array for each level
     var saveLevels = this.levels.map(function (level) {
+      // containing an object with the level index and high score
       return {
         index: level.index,
         highScore: level.highScore
       };
     });
+
+    // set the local storage
     localStorage.setItem('levels', JSON.stringify(saveLevels));
   },
 
+  // function to load the save
   loadSave: function () {
+    // get and parse the local storage
     var savedLevels = JSON.parse(localStorage.getItem('levels'));
+    // if there was anything saved
     if (savedLevels) {
       var self = this;
+      // for each saved level
       savedLevels.forEach(function (level) {
+        // set the level's high score
         self.levels[level.index].highScore = level.highScore;
       });
     }
-
   },
 
+  // function to size the game
   size: function () {
+    // if there is a current level
     if (this.currentLevel) {
+      // size the board
       this.currentLevel.board.size();
     }
   }
-
-
 }
 
+// stuff to do when the document loads
 $(function () {
 
   game.loadSave();
