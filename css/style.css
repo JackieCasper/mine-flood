@@ -16,6 +16,7 @@ html {
   align-items: center;
   text-align: center;
   padding-left: 40px;
+  margin-top: 20px;
 }
 
 .levels {
@@ -24,6 +25,7 @@ html {
   width: 100%;
   max-width: 800px;
   justify-content: center;
+  margin-top: 20px;
 }
 
 .level-holder {
@@ -71,7 +73,7 @@ p.score {
 }
 
 .game-tile {
-  background-size: cover;
+  background-size: 80%;
   background-position: center;
   background-repeat: no-repeat;
   background-color: rgba(230, 240, 255, .3);
@@ -116,10 +118,7 @@ p.score {
 }
 
 .marked {
-  background-color: yellow;
-  background-image: url(../img/god.jpg);
-  background-blend-mode: exclusion;
-  background-color: chartreuse;
+  background-image: url(../img/flag.svg);
 }
 
 .active-5 {
@@ -211,8 +210,8 @@ div.bottom-controls {
 }
 
 div.color-choice {
-  height: 70px;
-  width: 70px;
+  height: 50px;
+  width: 50px;
   -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, .5);
   box-shadow: 0 0 20px rgba(0, 0, 0, .5);
 }
@@ -222,11 +221,18 @@ footer {
   justify-content: center;
   margin-bottom: 50px;
   margin-top: -40px;
+  padding-left: 40px;
 }
 
 header {
   text-align: center;
-  padding-left: 40px;
+  padding: 20px 0px 20px 40px;
+  background-color: rgba(0, 0, 0, .4);
+  padding-top: 20px;
+}
+
+h1 {
+  margin: 0 auto;
 }
 
 nav {
@@ -255,8 +261,166 @@ nav {
 
 .nav-button>p {
   transition: all .5s ease;
+  height: 30px;
+  width: 30px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
 }
 
 .nav-button:hover>p {
-  transform: scale(2);
+  transform: scale(1.4);
+}
+
+#settings>p {
+  background-image: url(../img/settings.svg);
+}
+
+#reload>p {
+  background-image: url(../img/reload.svg);
+}
+
+.custom-level-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 800px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+
+.custom-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 780px;
+}
+
+.custom-level-control {
+  width: 100%;
+  max-width: 220px;
+  margin: 10px 0;
+}
+
+.custom-level-control>label {
+  display: block;
+  text-align: left;
+}
+
+.custom-level-control>input {
+  padding: 7px 10px;
+  width: 100%;
+  border-width: 0px;
+  outline: 0px solid transparent;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, .4);
+}
+
+#custom-level-submit {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, .5);
+  cursor: pointer;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, .4);
+  margin-top: 20px;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, .3);
+  padding-left: 40px;
+}
+
+.game-control {
+  margin: 0px 20px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+#mark-flag {
+  height: 30px;
+  width: 30px;
+  background-image: url(../img/flag.svg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+body.light {
+  background-color: #eee;
+}
+
+body.light header {
+  background-color: #ccc;
+}
+
+body.light nav {
+  background-color: white;
+  color: #777;
+  fill: #777;
+}
+
+@media screen and (max-width: 880px) {
+  .custom-level-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+  .custom-controls {
+    max-width: 580px;
+    margin-left: -20px;
+  }
+  .custom-level-control {
+    max-width: 580px;
+  }
+  #custom-level-submit {
+    max-width: 600px;
+  }
+  .levels {
+    max-width: 500px;
+    padding: 10px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  header {
+    padding-left: 0px;
+  }
+  nav {
+    flex-direction: row;
+    justify-content: space-around;
+    height: 40px;
+    width: 100%;
+    bottom: 0px;
+    top: auto;
+  }
+  .nav-button {
+    height: 30px;
+    border-bottom: 0px solid transparent;
+    border-right: 1px solid white;
+    width: 25%;
+  }
+  .nav-button:last-of-type {
+    border-right: 0px solid transparent;
+  }
+  .container {
+    padding: 10px;
+  }
+  .level-holder {
+    width: 120px;
+    height: 120px;
+  }
+  .game-controls {
+    padding-left: 10px;
+  }
 }

@@ -13,13 +13,35 @@
   <header>
     <h1>MINESWEEPER</h1>
     <h2 class="sub-head">Jackie</h3>
-    <p id="timer"></p>
+    
  </header>
+ <div class='game-controls'>
+     <p id="counter" class="game-control"></p>
+     <div id="mark-flag" class="game-control"></div>
+      <p id="timer" class="game-control"></p>
+    </div>
   <div class="container">
     
     <div class="levels">
-
+      
     </div>
+    <div class="custom-level-container">
+       <div class="custom-controls">
+        <div class="custom-level-control">
+          <label class="custom-level-label" for="custom-rows">Rows:</label>
+          <input type="number" min="5" id="custom-rows" name="custom-rows">
+        </div>
+        <div class="custom-level-control">
+          <label class="custom-level-label" for="custom-columns">Columns:</label>
+          <input type="number" min="5" id="custom-columns" name="custom-columns">
+        </div>
+         <div class="custom-level-control">
+          <label class="custom-level-label" for="custom-mines">Mines:</label>
+          <input type="number" min="5" id="custom-mines" name="custom-mines">
+        </div>
+        </div>
+         <div id="custom-level-submit">Play Custom Level</div>
+      </div>
   </div>
   <!--<dialog class="overlay transparent">
     <div class="overlay-content">
@@ -38,13 +60,14 @@
       <div class="color-choice"></div>
       <div class="color-choice"></div>
       <div class="color-choice"></div>
+      <div class="color-choice"></div>
     </div>
   </footer>
   <nav>
-    <div class="nav-button"><p>L</p></div>
-    <div class="nav-button"><p>||</p></div>
-    <div class="nav-button"><p>R</p></div>
-    <div class="nav-button"><p>S</p></div>
+    <div class="nav-button" id="levels"><p>&#x2630;</p></div>
+    <div class="nav-button" id="pause"><p>||</p></div>
+    <div class="nav-button" id="reload"><p></p></div>
+    <div class="nav-button" id="settings"><p></p></div>
   </nav>
 </body>
 <script src="js/jquery.js"></script>

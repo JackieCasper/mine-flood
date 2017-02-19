@@ -155,7 +155,7 @@ var tileFactory = function (row, column) {
         board.bombGuesses--;
       }
       $(this).toggleClass('marked');
-
+      $('#counter').text(`Mines: ${board.bombGuesses}/${board.bombAmount}`);
     },
     getAdjacent: function () {
       var self = this;
@@ -246,14 +246,18 @@ var tileFactory = function (row, column) {
 
   // add click event handler 
   $(tile).click(function () {
-    // if it is the first tile clicked
-    if (!board.valuesAssigned) {
-      // generate bombs
-      board.generateBombs(tile);
-      // otherwise
-    } else if (!tile.activated && !tile.marked) {
-      // activate tiles
-      tile.activate();
+    if (!board.marking) {
+      // if it is the first tile clicked
+      if (!board.valuesAssigned) {
+        // generate bombs
+        board.generateBombs(tile);
+        // otherwise
+      } else if (!tile.activated && !tile.marked) {
+        // activate tiles
+        tile.activate();
+      }
+    } else {
+      tile.toggleMarked();
     }
   })
 
@@ -281,6 +285,12 @@ var boardFactory = function (rows, columns, bombs) {
     totalNonBombs: rows * columns - bombs,
     flowTiles: [],
     flow: false,
+    marking: false,
+
+    toggleMarking: function () {
+      this.marking = !this.marking;
+      $('#mark-flag').toggleClass('marking');
+    },
 
     // define board methods
     handleLoss: function () {
@@ -375,6 +385,8 @@ var boardFactory = function (rows, columns, bombs) {
       this.bombGuesses = 0;
       this.tiles = [];
       this.valuesAssigned = false;
+      game.currentLevel.timer.pause();
+      game.currentLevel.timer.reset();
     },
 
     // function to size / resize the game board
@@ -415,6 +427,11 @@ var boardFactory = function (rows, columns, bombs) {
           this.tiles.push(tile);
         }
       }
+      setTimeout(function () {
+        $(board).slideDown();
+      }, 100);
+      $('#counter').text(`Mines: 0/${this.bombAmount}`);
+
     },
 
 
@@ -445,11 +462,13 @@ function Level(index, rows, cols, bombs) {
     var self = this;
     $('.levels').slideUp('slow', function () {
       $('.sub-head').text('Level: ' + (self.index + 1));
+      $(self.board).hide();
       $('.container').append(self.board);
       $('#timer').text('0:00').show();
       self.board.size(true);
     });
     board = this.board;
+    $('.game-controls').slideDown('fast');
   }
 
   this.turnColorFlow = function () {
@@ -553,13 +572,14 @@ function Timer() {
 
 var game = {
   levels: [
-    new Level(0, 10, 15, 20),
-    new Level(1, 11, 15, 27),
-    new Level(2, 12, 15, 34),
-    new Level(3, 15, 17, 40),
-    new Level(4, 18, 20, 55)
+    new Level(0, 9, 9, 15),
+    new Level(1, 10, 15, 25),
+    new Level(2, 11, 15, 35),
+    new Level(3, 12, 15, 40),
+    new Level(4, 15, 17, 45),
+    new Level(5, 18, 20, 55)
   ],
-  colors: ['rgb(140, 198, 63)', 'rgb(0, 169, 157)', 'rgb(249, 161, 56)', 'rgb(49, 212, 224)', 'rgb(251, 209, 59)'],
+  colors: ['rgb(241, 103, 72)', 'rgb(140, 198, 63)', 'rgb(0, 169, 157)', 'rgb(249, 161, 56)', 'rgb(49, 212, 224)', 'rgb(251, 209, 59)'],
   playerName: '',
 
   currentLevel: 0,
@@ -572,6 +592,10 @@ var game = {
     var $score;
     var self = this;
     var colorIndex = 0;
+    var $customLevelControls = $('.custom-level-container');
+    $('.game-controls').hide();
+
+
 
     $('.color-choice').hide();
 
@@ -624,9 +648,13 @@ var game = {
       $levelHolder.append($levelContainer);
 
       $levels.append($levelHolder);
-      $levels.slideDown('fast');
+
+
 
     });
+    $levels.append($customLevelControls);
+    $levels.slideDown('fast');
+
   },
   clearHighScores: function () {
     this.levels.forEach(function (level) {
@@ -673,8 +701,21 @@ $(function () {
   $(window).resize(function () {
     game.size();
   });
-  $('.nav-button').first().click(function () {
+  $('#levels').click(function () {
+    game.generateLevelChoice();
+  });
+  $('#pause').click(function () {
+    game.currentLevel.timer.pause();
+  });
+  $('#reload').click(function () {
+    game.currentLevel.board.clear();
+    game.currentLevel.renderLevel();
+  });
+  $('#settings').click(function () {
     game.currentLevel.turnColorFlow();
+  });
+  $('#mark-flag').click(function () {
+    board.toggleMarking();
   })
 
 });
