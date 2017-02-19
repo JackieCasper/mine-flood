@@ -59,6 +59,7 @@ var tileFactory = function (row, column) {
     value: 0,
     activated: false,
     marked: false,
+    color: '',
 
     // tile methods
     // function to get surrounding tiles
@@ -134,7 +135,7 @@ var tileFactory = function (row, column) {
       // if it is activated 
       if (this.activated) {
         // if there are bombs around it
-        if (this.value != 0) {
+        if (this.value !== 0) {
           // set the text to the value
           $(this).text(this.value);
         }
@@ -155,6 +156,72 @@ var tileFactory = function (row, column) {
       }
       $(this).toggleClass('marked');
 
+    },
+    getAdjacent: function () {
+      var self = this;
+      return board.tiles.filter(function (tile) {
+        return ((tile.column === self.column - 1 || tile.column === self.column + 1) && tile.row === self.row) || (tile.column === self.column && (tile.row === self.row + 1 || tile.row === self.row - 1));
+      });
+    },
+
+    flow: function (changeColor) {
+      var self = this;
+      this.color = changeColor;
+      $(this).css('background-color', this.color);
+
+      var groupedArray = this.getAdjacent().filter(function (adjTile) {
+        return self.color === adjTile.color && !adjTile.activated;
+      });
+
+      while (groupedArray.length > 0) {
+        var groupTile = groupedArray[0];
+        groupTile.getAdjacent().filter(function (adjTile) {
+          return groupTile.color === adjTile.color && !adjTile.activated;
+        }).forEach(function (adjTile) {
+          groupedArray.push(adjTile);
+          adjTile.activated = true;
+        });
+        game.currentLevel.board.flowTiles.push(groupTile);
+        groupTile.activated = true;
+        groupedArray.shift();
+      }
+    },
+    turnColorFlow: function (i) {
+      var self = this;
+      this.color = game.colors[Math.floor(Math.random() * game.colors.length)];
+
+      var adjTiles = this.getAdjacent();
+      var colors = game.colors.filter(function (color) {
+        return color !== self.color;
+      });
+
+      while (colors.length > 0) {
+        var sameColor = adjTiles.filter(function (adjTile) {
+          return adjTile.color === self.color;
+        });
+        if (sameColor.length > 0 && Math.round(Math.random() - .3) <= 0) {
+          tile.color = colors[Math.floor(Math.random() * colors.length)];
+          colors = colors.filter(function (color) {
+            return color !== self.color;
+          });
+        } else {
+          colors = [];
+        }
+      }
+
+      setTimeout(function () {
+        $(self).css('background-color', self.color);
+        $(self).removeClass(`marked active active-${self.value}`).addClass('color-flow');
+        $(self).text('');
+      }, 5 * i);
+
+      this.activated = false;
+
+      this.marked = false;
+
+
+
+      $(this).unbind('click contextmenu');
     }
 
 
@@ -212,14 +279,40 @@ var boardFactory = function (rows, columns, bombs) {
     valuesAssigned: false,
     activatedTiles: 0,
     totalNonBombs: rows * columns - bombs,
+    flowTiles: [],
+    flow: false,
 
     // define board methods
     handleLoss: function () {
+      game.currentLevel.timer.pause;
       alert('You Lose');
+      game.generateLevelChoice();
     },
 
+    // used for development
+    triggerWin() {
+      this.tiles.forEach(function (tile) {
+        if (!tile.activated && tile.value !== '') {
+          $(tile).click();
+        }
+      });
+    },
     handleWin: function () {
-      alert('You Win')
+      if (this.flow) {
+
+        game.currentLevel.timer.pause;
+        var winString = 'You Win! '
+        if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
+          winString += 'New Record! ';
+          game.currentLevel.highScore = game.currentLevel.timer.time;
+          game.save();
+        }
+        alert(winString + game.currentLevel.timer.getFormatted());
+        game.generateLevelChoice();
+      } else {
+        game.currentLevel.turnColorFlow();
+      }
+
     },
 
     // method to get a specific tile
@@ -250,13 +343,19 @@ var boardFactory = function (rows, columns, bombs) {
 
     // function to generate bombs
     generateBombs: function (firstTile) {
+      var surrounding = [];
       this.firstTile = firstTile;
+      var randomTiles = this.tiles;
 
-      // create new array of tiles excluding the first tile
-      var randomTiles = this.tiles.filter(function (tile) {
-        return !(tile.row === firstTile.row && tile.column === firstTile.column);
-      });
-      // sort tiles randomly
+      surrounding = firstTile.getSurrounding();
+      surrounding.push(firstTile);
+
+      surrounding.forEach(function (surroundingTile) {
+        randomTiles = randomTiles.filter(function (tile) {
+          return !(tile.row === surroundingTile.row && tile.column === surroundingTile.column);
+        });
+      })
+
       randomTiles.sort(function (a, b) {
         return .5 - Math.random();
       });
@@ -272,24 +371,39 @@ var boardFactory = function (rows, columns, bombs) {
     // function to clear the game board
     clear: function () {
       $(this).children().remove();
+      this.activatedTiles = 0;
+      this.bombGuesses = 0;
+      this.tiles = [];
+      this.valuesAssigned = false;
     },
 
     // function to size / resize the game board
-    size: function () {
+    size: function (firstTime) {
       // get vph and vpw
       var vpw = $(window).innerWidth();
       var vph = $(window).innerHeight();
+      var cols = this.columnAmount;
+      if (firstTime) {
+        if (vpw / this.columnAmount < vph / this.rowAmount) {
+          this.columnAmount = this.rowAmount;
+          this.rowAmount = cols;
+
+        }
+        this.generateTiles();
+      }
 
       // get size of each tile
       var size = (vpw / this.columnAmount) > (vph / this.rowAmount) ? ((vph / 10) * 8) / this.rowAmount : ((vpw / 10) * 8) / this.columnAmount;
 
       //set size of board
-      $(this).width(size * this.columnAmount).height(size * this.rowAmount);
+      $(this).width((size + 2) * this.columnAmount).height((size + 2) * this.rowAmount);
+
 
       // set size of tiles
       this.tiles.forEach(function (tile) {
         $(tile).width(size).height(size);
       });
+
 
     },
 
@@ -301,10 +415,13 @@ var boardFactory = function (rows, columns, bombs) {
           this.tiles.push(tile);
         }
       }
-      this.size();
-    }
+    },
+
 
   }
+
+
+
   board.__proto__ = $board;
 
 
@@ -313,25 +430,82 @@ var boardFactory = function (rows, columns, bombs) {
 
 
 
-function Level(rows, cols, bombs) {
+function Level(index, rows, cols, bombs) {
   this.rows = rows;
   this.columns = cols;
   this.bombs = bombs;
   this.board = boardFactory(rows, cols, bombs);
   this.highScore = 0;
   this.timer = new Timer();
+  this.index = index;
+  this.playing = false;
 
 
   this.renderLevel = function () {
     var self = this;
     $('.levels').slideUp('slow', function () {
-      console.log(self.board);
-      $('.sub-head').text()
+      $('.sub-head').text('Level: ' + (self.index + 1));
       $('.container').append(self.board);
-      self.board.generateTiles();
+      $('#timer').text('0:00').show();
+      self.board.size(true);
     });
+    board = this.board;
   }
+
+  this.turnColorFlow = function () {
+
+    this.board.flow = true;
+    // turn all tiles colors
+    var self = this;
+    this.board.flowTiles = [];
+
+    this.board.tiles.forEach(function (tile, i) {
+      tile.turnColorFlow(i);
+    });
+
+
+    var firstTile = self.board.getTile(0, 0);
+    var firstColor = firstTile.color;
+    self.board.flowTiles.push(firstTile);
+    firstTile.activated = true;
+    firstTile.flow(firstColor);
+
+
+
+    var colorChoices = $('.color-choice');
+
+    colors = game.colors.filter(function (color) {
+      return color !== firstColor;
+    });
+
+
+    colorChoices.each(function (i, colorChoice) {
+      $(colorChoice).unbind('click');
+
+      $(colorChoice).css('background-color', colors[i]);
+      $(colorChoice).click(function () {
+
+        var changeColor = $(this).css('background-color');
+        var lastColor = board.getTile(0, 0).color;
+
+        board.flowTiles.forEach(function (tile) {
+          tile.flow(changeColor);
+
+        });
+        $(this).css('background-color', lastColor);
+        if (board.flowTiles.length === self.board.tiles.length) {
+          board.handleWin();
+        }
+
+      });
+      $(colorChoice).fadeIn('fast');
+    });
+
+  }
+
 }
+
+
 
 function Timer() {
   this.time = 0;
@@ -355,10 +529,11 @@ function Timer() {
 
   this.pause = function () {
     this.running = false;
-    window.clearInterval(this.intervalID);
+    window.clearInterval(this.interval);
   };
   this.reset = function () {
-
+    this.pause();
+    this.time = 0;
   }
   this.increment = function () {
     if (this.running) {
@@ -378,12 +553,13 @@ function Timer() {
 
 var game = {
   levels: [
-    new Level(10, 15, 20),
-    new Level(12, 15, 30),
-    new Level(15, 17, 35),
-    new Level(18, 20, 40)
-
+    new Level(0, 10, 15, 20),
+    new Level(1, 11, 15, 27),
+    new Level(2, 12, 15, 34),
+    new Level(3, 15, 17, 40),
+    new Level(4, 18, 20, 55)
   ],
+  colors: ['rgb(140, 198, 63)', 'rgb(0, 169, 157)', 'rgb(249, 161, 56)', 'rgb(49, 212, 224)', 'rgb(251, 209, 59)'],
   playerName: '',
 
   currentLevel: 0,
@@ -395,6 +571,19 @@ var game = {
     var $level;
     var $score;
     var self = this;
+    var colorIndex = 0;
+
+    $('.color-choice').hide();
+
+    $levels.children().remove();
+    if (this.currentLevel) {
+      this.currentLevel.timer.reset();
+      $(this.currentLevel.board).remove();
+      this.currentLevel.board.clear();
+      this.currentLevel = 0;
+      $('#timer').hide();
+    }
+
     this.levels.forEach(function (level, i) {
 
       $('.sub-head').text(self.playerName);
@@ -409,21 +598,61 @@ var game = {
         level.renderLevel();
       });
 
+      $levelContainer.css('background-color', self.colors[colorIndex]);
+
+      if (colorIndex === self.colors.length - 1) {
+        colorIndex = 0;
+      } else {
+        colorIndex++;
+      }
+
+
       if (level.highScore > 0) {
+        var seconds = Math.floor(level.highScore);
+        var minutes = Math.floor(seconds / 60);
+
         $score = $('<p class="score">');
-        $score.text(level.highScore);
+
+        seconds = seconds % 60;
+        if (seconds.toString().length === 1) {
+          seconds = '0' + seconds;
+        }
+        $score.text(minutes + ':' + seconds);
         $levelContainer.append($score);
       }
 
       $levelHolder.append($levelContainer);
 
       $levels.append($levelHolder);
-    })
-  },
-  save: function () {
+      $levels.slideDown('fast');
 
+    });
   },
+  clearHighScores: function () {
+    this.levels.forEach(function (level) {
+      level.highScore = 0;
+    });
+    this.save();
+  },
+
+  save: function () {
+    var saveLevels = this.levels.map(function (level) {
+      return {
+        index: level.index,
+        highScore: level.highScore
+      };
+    });
+    localStorage.setItem('levels', JSON.stringify(saveLevels));
+  },
+
   loadSave: function () {
+    var savedLevels = JSON.parse(localStorage.getItem('levels'));
+    if (savedLevels) {
+      var self = this;
+      savedLevels.forEach(function (level) {
+        self.levels[level.index].highScore = level.highScore;
+      });
+    }
 
   },
 
@@ -432,18 +661,20 @@ var game = {
       this.currentLevel.board.size();
     }
   }
+
+
 }
 
 $(function () {
-  //  board = boardFactory(10, 15, 20);
-  //  board.generateTiles();
-  //$('.container').append($(board));
 
+  game.loadSave();
   game.generateLevelChoice();
 
   $(window).resize(function () {
     game.size();
   });
-  console.log(board);
+  $('.nav-button').first().click(function () {
+    game.currentLevel.turnColorFlow();
+  })
 
 });
