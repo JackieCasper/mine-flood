@@ -379,7 +379,7 @@ div.color-choice {
 
 .win-content>h3 {
   font-size: 3em;
-  margin: 40px 0px;
+  margin: 0 0 40px 0;
 }
 
 p.win-message {
