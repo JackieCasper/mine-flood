@@ -524,18 +524,20 @@ var boardFactory = function (rows, columns, bombs) {
 
           if (game.currentLevel.skipped) {
             var $winMessage = $('<p class="win-message">');
-            $winMessage.text('You skipped a part! No records recorded');
+            $winMessage.text('You skipped a part! No score recorded');
             $winContent.append($winMessage);
-          } else if (game.currentLevel.index !== 'Custom') {
+          } else {
+            // set high score
+            game.currentLevel.highScore = game.currentLevel.timer.time;
+            // save high score
+            game.save();
+          }
+          if (game.currentLevel.index !== 'Custom') {
             // if it is a high score
-            if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
+            if ((game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) && !game.currentLevel.skipped) {
               var $winMessage = $('<p class="win-message">');
               $winMessage.text('New Record!');
               $winContent.append($winMessage);
-              // set high score
-              game.currentLevel.highScore = game.currentLevel.timer.time;
-              // save high score
-              game.save();
             }
 
             $highScore.text(timer.getFormatted(game.currentLevel.highScore));
