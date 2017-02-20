@@ -42,6 +42,61 @@
 //Game
 //  Player
 //  Levels
+
+/*
+THINGS TO DO STILL
+
+
+RULES / DIRECTIONS
+
+MINESWEEPER
+Don't click on a mine
+Click tiles to reveil what is under them
+if you uncover a number, it represents how many mines are around that tile
+an empty space will uncover its neighbors until it reaches tiles that have mines near them
+mark mines by right clicking or using the flag button to keep track of where the bombs are 
+the first tile you uncover will always be an empty space
+you win once all the non-mine tiles are uncovered
+
+COLOR FLOOD
+
+fill the board with a single color in the amount of turns given
+starting in the upper left corner, change the color of the tiles to match its neighbors
+each turn, the matching tiles are added to the play area until the board is flooded 
+
+
+PAUSE SCREEN
+pause sign flashing
+timer
+play button
+
+WIN SCREEN
+win message
+time
+high score
+-handle custom
+next level
+replay level
+level choice
+
+LOSE SCREEN
+lose message
+replay level
+level choice
+
+LANDING PAGE
+name input
+save name to local storage
+load name from local storage on play page
+if name is already set, welcome message
+ability to change name
+blurb about game
+Mine Flow is a mash-up of two games: minesweeper and color flow. In minesweeper, use tile values to avoid uncovering mines. Then fill the board with a single color in color flood.
+
+Bonus:
+make it so levels can only be played in order
+
+*/
 var board;
 
 
@@ -70,7 +125,7 @@ var tileFactory = function (row, column) {
 
         // filter board tiles to only include tiles that surround this tile, also not including this tile
         return board.tiles.filter(function (tile) {
-          return ((row - 1 >= 0 && tile.row === row - 1) || tile.row === row || (row + 1 < board.rowAmount && tile.row === row + 1)) && ((column - 1 >= 0 && tile.column === column - 1) || tile.column === column || (column + 1 < board.columnAmount && tile.column === column + 1)) && !(tile.row === row && tile.column === column)
+          return ((row - 1 >= 0 && tile.row === row - 1) || tile.row === row || (row + 1 < board.rowAmount && tile.row === row + 1)) && ((column - 1 >= 0 && tile.column === column - 1) || tile.column === column || (column + 1 < board.columnAmount && tile.column === column + 1)) && !(tile.row === row && tile.column === column);
         });
 
       },
@@ -146,18 +201,20 @@ var tileFactory = function (row, column) {
 
       // function to toggle if the tile is marked
       toggleMarked: function () {
-        // set marked to not marked
-        this.marked = !this.marked;
-        // add or remove from bomb guesses
-        if (this.marked) {
-          board.bombGuesses++;
-        } else {
-          board.bombGuesses--;
+        if (!this.activated) {
+          // set marked to not marked
+          this.marked = !this.marked;
+          // add or remove from bomb guesses
+          if (this.marked) {
+            board.bombGuesses++;
+          } else {
+            board.bombGuesses--;
+          }
+          // toggle marked class
+          $(this).toggleClass('marked');
+          // change counter text
+          $('#counter').text(`Mines: ${board.bombGuesses}/${board.bombAmount}`);
         }
-        // toggle marked class
-        $(this).toggleClass('marked');
-        // change counter text
-        $('#counter').text(`Mines: ${board.bombGuesses}/${board.bombAmount}`);
       },
 
       // function to get adjacent tiles -- for color flood
@@ -267,7 +324,6 @@ var tileFactory = function (row, column) {
       }
     }
 
-
     // set the tile prototype to the tile element
     tile.__proto__ = $($tile);
 
@@ -329,7 +385,7 @@ var boardFactory = function (rows, columns, bombs) {
       floodTiles: [],
       flood: false,
       marking: false,
-      floodTotalTurns: (rows * columns) / 3,
+      floodTotalTurns: Math.round((rows * columns) / 3),
       floodTurns: 0,
 
       // function to toggle if player is currently marking a tile
@@ -347,38 +403,119 @@ var boardFactory = function (rows, columns, bombs) {
         game.generateLevelChoice();
       },
 
-      // function used to skip the playing process for minesweeper
+      // function used to skip the playing process
       // used for development
       triggerWin() {
-        // basically click each tile that isn't a bomb
-        this.tiles.forEach(function (tile) {
-          if (!tile.activated && tile.value !== '') {
-            $(tile).click();
-          }
-        });
+        if (this.flood) {
+          var tilesToAdd = this.tiles;
+          var color = this.floodTiles[0].color;
+          var self = this;
+          this.floodTiles.forEach(function (floodTile) {
+            tilesToAdd.filter(function (tile) {
+              return tile.column !== floodTile.column || tile.row !== floodTile.row;
+            });
+          });
+
+          tilesToAdd.forEach(function (tileToAdd) {
+            tileToAdd.color = color;
+            $(tileToAdd).css('background-color', color);
+            tileToAdd.activated = true;
+            self.floodTiles.push(tileToAdd);
+          });
+          $('.color-choice').first().click();
+        } else {
+          // basically click each tile that isn't a bomb
+          this.tiles.forEach(function (tile) {
+            if (!tile.activated && tile.value !== '') {
+              $(tile).click();
+            }
+          });
+        }
       },
 
       // function to handle a win
       handleWin: function () {
         // if it is color flood
         if (this.flood) {
-          var winString = 'You Win! '
-            // pause the game
+          var $overlay = $('.overlay');
+
+          var $winContent = $('<div class="win-content">');
+          var $winHead = $('<h3>');
+
+          var $winScore = $('<p class="win-score">');
+          var $highScore = $('<p class="win-high-score">');
+
+          var $winControls = $('<div class="win-controls">');
+
+          var $levels = $('<div class="win-control" id="win-levels">');
+
+
+          var $reload = $('<div class="win-control" id="win-reload">');
+
+          var $nextLevel = $('<div class="win-control" id="win-next-level">');
+
+          var timer = new Timer();
+
+          // pause the game
           game.currentLevel.timer.pause;
 
-          // if it is a high score
-          if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
-            // add to win string
-            winString += 'New Record! ';
-            // set high score
-            game.currentLevel.highScore = game.currentLevel.timer.time;
-            // save high score
-            game.save();
+
+
+          $winHead.text('You Win!');
+          $winContent.append($winHead);
+
+          $winScore.text(game.currentLevel.timer.getFormatted());
+          $winContent.append($winScore);
+
+          $levels.html('&#x2630;');
+          $levels.one('click', function () {
+            game.generateLevelChoice();
+          });
+
+          $reload.one('click', function () {
+            $overlay.fadeOut('fast');
+            $overlay.children().remove();
+
+            game.currentLevel.board.clear();
+            game.currentLevel.renderLevel();
+          })
+
+          $winControls.append($levels, $reload);
+
+          if (game.currentLevel.index < game.levels.length && game.currentLevel.index !== 'Custom') {
+            $nextLevel.html('&#x21e8;');
+            $nextLevel.one('click', function () {
+              var nextLevel = game.levels[game.currentLevel.index + 1];
+              game.currentLevel.resetLevel();
+              game.currentLevel = nextLevel;
+              nextLevel.renderLevel();
+              $overlay.fadeOut('fast');
+              $overlay.children().remove();
+            });
+            $winControls.append($nextLevel);
           }
-          alert(winString + game.currentLevel.timer.getFormatted());
-          // go back to level choice
-          game.generateLevelChoice();
-          // if its not color flood
+
+
+          if (game.currentLevel.index !== 'Custom') {
+            // if it is a high score
+            if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
+              var $winMessage = $('<p class="win-message">');
+              $winMessage.text('New Record!');
+              $winContent.append($winMessage);
+              // set high score
+              game.currentLevel.highScore = game.currentLevel.timer.time;
+              // save high score
+              game.save();
+            }
+
+            $highScore.text(timer.getFormatted(game.currentLevel.highScore));
+            $winContent.append($highScore);
+          }
+          $winContent.append($winControls);
+
+          $overlay.append($winContent).fadeIn('fast');
+
+
         } else {
           // turn into color flood
           game.currentLevel.turnColorFlood();
@@ -515,9 +652,9 @@ var boardFactory = function (rows, columns, bombs) {
           }
         }
 
-        // slide down board
+        // fade in board
         setTimeout(function () {
-          $(board).slideDown();
+          $(board).fadeIn('fast');
         }, 100);
 
         // set mine counter
@@ -553,10 +690,10 @@ function Level(index, rows, cols, bombs) {
   this.renderLevel = function () {
     var self = this;
     // hide the level choices
-    $('.levels').slideUp('slow', function () {
+    $('.levels').fadeOut('fast', function () {
       // change the subhead text to the current level
       $('.sub-head').text('Level: ' + (self.index + 1));
-      // hide the board now so it can slide down later
+      // hide the board now so it can fade in later
       $(self.board).hide();
       // append the board to the container
       $('.container').append(self.board);
@@ -565,15 +702,26 @@ function Level(index, rows, cols, bombs) {
       // size the board for the first time
       self.board.size(true);
       // show the mark flag
-      $('#mark-flag').slideDown('fast');
+      $('#mark-flag').fadeIn('fast');
     });
     // set the board to the current board
     board = this.board;
-    // slide the game controls down
-    $('.game-controls').slideDown('fast');
+    // fade the game controls in
+    $('.game-controls').fadeIn('fast');
     $('#levels').show();
     $('#pause').show();
     $('#reload').show();
+  }
+
+  this.resetLevel = function () {
+    // reset the timer
+    this.timer.reset();
+    // remove the board
+    $(this.board).remove();
+    // clear the board
+    this.board.clear();
+    // clear the current level
+    game.currentLevel = 0;
   }
 
   // function to turn level to color flood
@@ -647,7 +795,7 @@ function Level(index, rows, cols, bombs) {
         $(this).css('background-color', lastColor);
 
         // if all the tiles are active
-        if (board.floodTiles.length === self.board.tiles.length) {
+        if (board.floodTiles.length >= self.board.tiles.length) {
           // handle win
           board.handleWin();
           // if out of turns
@@ -718,9 +866,12 @@ function Timer() {
   }
 
   // function to get the formatted timer
-  this.getFormatted = function () {
+  this.getFormatted = function (time) {
+    if (!time) {
+      time = this.time;
+    }
     // get seconds
-    var seconds = Math.floor(this.time);
+    var seconds = Math.floor(time);
     // change to minutes
     var minutes = Math.floor(seconds / 60);
     // get remaining seconds
@@ -810,26 +961,21 @@ var game = {
 
     var customInputs = [$customRows, $customColumns, $customMines];
 
-    // hide the game controls, un-needed menu buttons and color choices
+    // hide the game controls, un-needed menu buttons, overlay and color choices
     $('.game-controls').hide();
     $('.color-choice').hide();
     $('#levels').hide();
     $('#pause').hide();
     $('#reload').hide();
+    $('.overlay').fadeOut('fast').children().remove();
+
 
     // remove all the children
     $levels.children().remove();
 
     // if there is a current level
     if (this.currentLevel) {
-      // reset the timer
-      this.currentLevel.timer.reset();
-      // remove the board
-      $(this.currentLevel.board).remove();
-      // clear the board
-      this.currentLevel.board.clear();
-      // clear the current level
-      this.currentLevel = 0;
+      this.currentLevel.resetLevel();
     }
 
     // set the sub-head to the player's name
@@ -868,17 +1014,9 @@ var game = {
       if (level.highScore > 0) {
         // create score element
         $score = $('<p class="score">');
-
-        // format to seconds and minutes
-        var seconds = Math.floor(level.highScore);
-        var minutes = Math.floor(seconds / 60);
-        seconds = seconds % 60;
-        if (seconds.toString().length === 1) {
-          seconds = '0' + seconds;
-        }
-
+        var timer = new Timer();
         // set element's text to formatted time
-        $score.text(minutes + ':' + seconds);
+        $score.text(timer.getFormatted(level.highScore));
         // add it to the level container
         $levelContainer.append($score);
       }
@@ -917,8 +1055,8 @@ var game = {
       self.createCustomLevel($customRows.val(), $customColumns.val(), $customMines.val());
     });
 
-    // slide the levels down
-    $levels.slideDown('fast');
+    // fade the levels in
+    $levels.fadeIn('fast');
 
   },
 
@@ -975,6 +1113,8 @@ var game = {
 
 // stuff to do when the document loads
 $(function () {
+  $('.win-content').hide();
+  $('.overlay').hide();
 
   game.loadSave();
   game.generateLevelChoice();
@@ -982,21 +1122,25 @@ $(function () {
   $(window).resize(function () {
     game.size();
   });
+
   $('#levels').click(function () {
     game.generateLevelChoice();
   });
+
   $('#pause').click(function () {
     game.currentLevel.timer.pause();
   });
+
   $('#reload').click(function () {
     game.currentLevel.board.clear();
     game.currentLevel.renderLevel();
   });
+
   //  $('#settings').click(function () {
   //    game.currentLevel.turnColorFlood();
   //  });
   $('#mark-flag').click(function () {
     board.toggleMarking();
-  })
+  });
 
 });
