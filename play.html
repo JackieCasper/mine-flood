@@ -30,15 +30,15 @@
        <div class="custom-controls">
         <div class="custom-level-control">
           <label class="custom-level-label" for="custom-rows">Rows:</label>
-          <input type="number" min="8" value="10" id="custom-rows" name="custom-rows">
+          <input type="number" min="8" max="30" value="10" id="custom-rows" name="custom-rows">
         </div>
         <div class="custom-level-control">
           <label class="custom-level-label" for="custom-columns">Columns:</label>
-          <input type="number" min="8" value="10" id="custom-columns" name="custom-columns">
+          <input type="number" min="8" max="30" value="10" id="custom-columns" name="custom-columns">
         </div>
          <div class="custom-level-control">
           <label class="custom-level-label" for="custom-mines">Mines:</label>
-          <input type="number" min="10" value="15" id="custom-mines" name="custom-mines">
+          <input type="number" min="10" max="891" value="15" id="custom-mines" name="custom-mines">
         </div>
         </div>
          <div id="custom-level-submit">Play Custom Level</div>
@@ -55,11 +55,11 @@
     </div>
   </footer>
   <nav>
-    <div class="nav-button" id="levels"><p>&#x2630;</p></div>
+    <div class="nav-button" id="levels"><p></p></div>
     <div class="nav-button" id="pause"><p>||</p></div>
     <div class="nav-button" id="reload"><p></p></div>
     <div class="nav-button" id="help"><p>?</p></div>
-    <!-- <div class="nav-button" id="settings"><p></p></div> -->
+    <div class="nav-button" id="skip"><p>&#x27A0;</p></div> 
   </nav>
   <div class="overlay scroll">
   <!--

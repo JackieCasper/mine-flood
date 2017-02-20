@@ -413,7 +413,6 @@ var boardFactory = function (rows, columns, bombs) {
         $lossHead.text(`You Lose, ${game.playerName}!`);
         $lossContent.append($lossHead);
 
-        $levels.html('&#x2630;');
         $levels.one('click', function () {
           game.generateLevelChoice();
         });
@@ -496,7 +495,6 @@ var boardFactory = function (rows, columns, bombs) {
           $winScore.text(game.currentLevel.timer.getFormatted());
           $winContent.append($winScore);
 
-          $levels.html('&#x2630;');
           $levels.one('click', function () {
             game.generateLevelChoice();
           });
@@ -524,8 +522,11 @@ var boardFactory = function (rows, columns, bombs) {
             $winControls.append($nextLevel);
           }
 
-
-          if (game.currentLevel.index !== 'Custom') {
+          if (game.currentLevel.skipped) {
+            var $winMessage = $('<p class="win-message">');
+            $winMessage.text('You skipped a part! No records recorded');
+            $winContent.append($winMessage);
+          } else if (game.currentLevel.index !== 'Custom') {
             // if it is a high score
             if (game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) {
               var $winMessage = $('<p class="win-message">');
@@ -712,6 +713,7 @@ function Level(index, rows, cols, bombs) {
   this.timer = new Timer();
   this.index = index;
   this.playing = false;
+  this.skipped = false;
 
 
   // function to render the level
@@ -739,6 +741,7 @@ function Level(index, rows, cols, bombs) {
     $('#levels').show();
     $('#pause').show();
     $('#reload').show();
+    $('#skip').show();
   }
 
   this.resetLevel = function () {
@@ -973,9 +976,9 @@ var game = {
     var val = Math.round(parseFloat($input.val()));
     // get the minimum of the input
     var min = parseInt($input.attr('min'));
+    var max = parseInt($input.attr('max'));
 
     var maxMines = Math.floor($('#custom-columns').val() * $('#custom-rows').val()) - 9;
-
 
     // if the value is less than 0
     if (val < 0) {
@@ -987,6 +990,10 @@ var game = {
     if (val < min) {
       // make it the min
       val = min;
+    }
+
+    if (val > max) {
+      val = max;
     }
 
 
@@ -1032,6 +1039,7 @@ var game = {
     $('.game-controls').hide();
     $('.color-choice').hide();
     $('#levels').hide();
+    $('#skip').hide();
     $('#pause').hide();
     $('#reload').hide();
     $('.overlay').fadeOut('fast').children().remove();
@@ -1254,6 +1262,11 @@ $(function () {
     game.currentLevel.board.clear();
     game.currentLevel.renderLevel();
   });
+
+  $('#skip').click(function () {
+    game.currentLevel.skipped = true;
+    game.currentLevel.board.triggerWin();
+  })
 
   //  $('#settings').click(function () {
   //    game.currentLevel.turnColorFlood();

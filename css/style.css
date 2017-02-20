@@ -188,6 +188,11 @@ hr {
   cursor: pointer;
 }
 
+#win-levels,
+#levels>p {
+  background-image: url(../img/levels.svg);
+}
+
 #game-board {
   display: flex;
   display: -webkit-flex;
