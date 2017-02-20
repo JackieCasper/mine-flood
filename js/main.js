@@ -52,7 +52,7 @@ RULES / DIRECTIONS
 MINESWEEPER
 Don't click on a mine
 Click tiles to reveil what is under them
-if you uncover a number, it represents how many mines are around that tile
+if you uncover a number, it indicates how many mines are around that tile
 an empty space will uncover its neighbors until it reaches tiles that have mines near them
 mark mines by right clicking or using the flag button to keep track of where the bombs are 
 the first tile you uncover will always be an empty space
@@ -234,7 +234,7 @@ var tileFactory = function (row, column) {
 
         // set tile's color
         this.color = changeColor;
-        $(this).css('background-color', this.color);
+        $(this).addClass('active-flood').css('background-color', this.color);
 
         // check surrounding tiles and look for groups of colors
         // get surrounding tiles
@@ -428,8 +428,7 @@ var boardFactory = function (rows, columns, bombs) {
 
         $lossControls.append($levels, $reload);
         $lossContent.append($lossControls);
-        $overlay.append($lossContent);
-        $overlay.fadeIn('fast');
+        $overlay.addClass('transparent').append($lossContent).fadeIn('fast');
 
       },
 
@@ -542,8 +541,7 @@ var boardFactory = function (rows, columns, bombs) {
             $winContent.append($highScore);
           }
           $winContent.append($winControls);
-
-          $overlay.append($winContent).fadeIn('fast');
+          $overlay.addClass('transparent').append($winContent).fadeIn('fast');
 
 
         } else {
@@ -837,6 +835,33 @@ function Level(index, rows, cols, bombs) {
       $($colorChoice).fadeIn('fast');
     });
   }
+  this.openPauseScreen = function () {
+
+    var $overlay = $('.overlay');
+    var $pauseScreen = $('<div class="pause-screen">');
+    var $pauseHead = $('<h1>');
+    var $pauseSubHead = $('<h2 class="sub-head">');
+    var $pausePause = $('<div class="pause-screen-pause">');
+    var $resume = $('<div class="resume">');
+    var self = this;
+
+    this.timer.pause();
+
+    $pauseHead.text('MINE FLOW');
+    $pauseSubHead.text($('header>.sub-head').text());
+
+    $pausePause.text('||');
+
+    $resume.text('Resume');
+    $resume.one('click', function () {
+      $overlay.fadeOut('fast').children().remove();
+      self.timer.start();
+    });
+
+    $pauseScreen.append($pauseHead, $pauseSubHead, $pausePause, $resume);
+    $overlay.removeClass('transparent').append($pauseScreen).fadeIn('fast');
+  }
+
 } // close level constructor
 
 
@@ -922,12 +947,16 @@ var game = {
 
   // level options
   levels: [
-    new Level(0, 9, 9, 15),
-    new Level(1, 10, 15, 25),
-    new Level(2, 11, 15, 35),
-    new Level(3, 12, 15, 40),
-    new Level(4, 15, 17, 45),
-    new Level(5, 18, 20, 55)
+    new Level(0, 9, 9, 10),
+    new Level(1, 10, 11, 17),
+    new Level(2, 12, 13, 24),
+    new Level(3, 14, 15, 33),
+    new Level(4, 16, 16, 40),
+    new Level(5, 17, 18, 52),
+    new Level(6, 19, 20, 65),
+    new Level(7, 21, 21, 76),
+    new Level(8, 22, 23, 87),
+    new Level(9, 24, 24, 99)
   ],
 
   // colors
@@ -1011,6 +1040,10 @@ var game = {
     // set the sub-head to the player's name
     $('.sub-head').text(self.playerName);
 
+    //levels will be random color from the color array
+    // not yellow, text doesn't show up well
+    var levelColor = self.colors[Math.floor(Math.random() * (self.colors.length - 1))];
+
     // for each level
     this.levels.forEach(function (level, i) {
       // create level holder
@@ -1022,34 +1055,34 @@ var game = {
       $level = $('<h4 class="level">');
       $level.text(i + 1);
       $levelContainer.append($level);
-      // add event listener for when level is clicked
-      $levelContainer.click(function () {
-        // set the current level
-        self.currentLevel = level;
-        // render the current level
-        level.renderLevel();
-      });
 
-      // set the background colors to match color flood tiles
-      $levelContainer.css('background-color', self.colors[colorIndex]);
-
-      // incriment color index, loop to begining at the end
-      if (colorIndex === self.colors.length - 1) {
-        colorIndex = 0;
-      } else {
-        colorIndex++;
-      }
 
       // if there is a high score
-      if (level.highScore > 0) {
-        // create score element
-        $score = $('<p class="score">');
-        var timer = new Timer();
-        // set element's text to formatted time
-        $score.text(timer.getFormatted(level.highScore));
-        // add it to the level container
-        $levelContainer.append($score);
+      if (level.highScore > 0 || level.index === 0) {
+        // add event listener for when level is clicked
+        $levelContainer.click(function () {
+          // set the current level
+          self.currentLevel = level;
+          // render the current level
+          level.renderLevel();
+        });
+
+
+        if (level.highScore > 0) {
+          // create score element
+          $score = $('<p class="score">');
+          var timer = new Timer();
+          // set element's text to formatted time
+          $score.text(timer.getFormatted(level.highScore));
+          // add it to the level container
+          $levelContainer.append($score);
+        }
+
+      } else {
+        $levelContainer.addClass('not-played');
       }
+      // set the background color 
+      $levelContainer.css('background-color', levelColor);
 
       // add container to holder
       $levelHolder.append($levelContainer);
@@ -1144,13 +1177,51 @@ var game = {
       // size the board
       this.currentLevel.board.size();
     }
+  },
+  openHelp: function () {
+    var $overlay = $('.overlay');
+    var $helpContent = $('<div class="help-content">');
+    var $helpH1 = $('<h1>');
+    var $helpMine = $('<h2>');
+    var $mineImg = $('<img src="img/minesweephelp2.png" class="help-image">');
+    var $mineText = $('<p class="help-text">');
+    var $helpFlood = $('<h2>');
+    var $floodImg = $('<img src="img/colorfloodhelp.gif" class="help-image">');
+    var $floodText = $('<p class="help-text">');
+    var $helpClose = $('<div class="close-help" id="close-help">');
+    var self = this;
+
+    if (this.currentLevel) {
+      this.currentLevel.timer.pause();
+    }
+
+    $helpH1.text('MINE FLOOD');
+
+    $helpMine.text('Mine');
+    $mineText.text('Click tiles to reveil what is under them, but don\'t click on a mine! If a number is uncovered,' +
+      'it indicates how many mines are around that tile. Empty spaces mean there are no mines near by and will uncover its' +
+      'neighbors until it reaches tiles that have mines near them. Mark tiles by right clicking or using the flag button to' +
+      'keep track of where the mines are. Win by uncovering all tiles other than the mines!');
+
+    $helpFlood.text('Flood');
+    $floodText.text('Fill the board with a single color in the given amount of turns. Starting in the upper left corner, change the color of' +
+      'the tiles to match its neighbors by clicking on the matching boxes under the board. Each turn, the matching tiles are' +
+      'added to the play area until the board is flooded.');
+
+    $helpClose.click(function () {
+      $overlay.fadeOut('fast').children().remove();
+      if (self.currentLevel) {
+        self.currentLevel.timer.start();
+      }
+    })
+
+    $helpContent.append($helpH1, $helpMine, $mineImg, $mineText, $helpFlood, $floodImg, $floodText, $helpClose);
+    $overlay.removeClass('transparent').append($helpContent).fadeIn('fast');
   }
 }
 
 // stuff to do when the document loads
 $(function () {
-  $('.win-content').hide();
-  $('.overlay').hide();
 
   game.loadSave();
   game.generateLevelChoice();
@@ -1164,7 +1235,7 @@ $(function () {
   });
 
   $('#pause').click(function () {
-    game.currentLevel.timer.pause();
+    game.currentLevel.openPauseScreen();
   });
 
   $('#reload').click(function () {
@@ -1178,5 +1249,9 @@ $(function () {
   $('#mark-flag').click(function () {
     board.toggleMarking();
   });
+
+  $('#help').click(function () {
+    game.openHelp();
+  })
 
 });
