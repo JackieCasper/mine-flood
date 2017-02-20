@@ -724,7 +724,7 @@ function Level(index, rows, cols, bombs) {
     // hide the level choices
     $('.levels').fadeOut('fast', function () {
       // change the subhead text to the current level
-      $('.sub-head').text('Level: ' + (self.index + 1));
+      $('.sub-head').text('Level: ' + (self.index + self.index !== 'Custom' ? self.index : ''));
       // hide the board now so it can fade in later
       $(self.board).hide();
       // append the board to the container
@@ -1220,14 +1220,14 @@ var game = {
     $helpH1.text('MINE FLOOD');
 
     $helpMine.text('Mine');
-    $mineText.text('Click tiles to reveil what is under them, but don\'t click on a mine! If a number is uncovered,' +
-      'it indicates how many mines are around that tile. Empty spaces mean there are no mines near by and will uncover its' +
-      'neighbors until it reaches tiles that have mines near them. Mark tiles by right clicking or using the flag button to' +
+    $mineText.text('Click tiles to reveal what is under them, but don\'t click on a mine! If a number is uncovered, ' +
+      'it indicates how many mines are around that tile. Empty spaces mean there are no mines near by and will uncover its ' +
+      'neighboring tiles until it reaches those that have mines near them. Mark tiles by right clicking or using the flag button to ' +
       'keep track of where the mines are. Win by uncovering all tiles other than the mines!');
 
     $helpFlood.text('Flood');
-    $floodText.text('Fill the board with a single color in the given amount of turns. Starting in the upper left corner, change the color of' +
-      'the tiles to match its neighbors by clicking on the matching boxes under the board. Each turn, the matching tiles are' +
+    $floodText.text('Fill the board with a single color in the given amount of turns. Starting in the upper left corner, change the color ' +
+      'of the tiles to match its neighbors by clicking on the matching color boxe under the board. Each turn, the matching tiles are ' +
       'added to the play area until the board is flooded.');
 
     $helpClose.click(function () {
