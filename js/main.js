@@ -974,6 +974,9 @@ var game = {
     // get the minimum of the input
     var min = parseInt($input.attr('min'));
 
+    var maxMines = Math.floor($('#custom-columns').val() * $('#custom-rows').val()) - 9;
+
+
     // if the value is less than 0
     if (val < 0) {
       // make it positive
@@ -984,6 +987,11 @@ var game = {
     if (val < min) {
       // make it the min
       val = min;
+    }
+
+
+    if ($input.attr('id') === 'custom-mines' && val > maxMines) {
+      val = maxMines;
     }
 
     // set the value 
@@ -1116,9 +1124,7 @@ var game = {
         // check the input value
         self.checkCustomInput($input);
       });
-      if ($customMines.val() > ($customColumns.val() * $customRows.val()) - 9) {
-        $customMines.val($customColumns.val() * $customRows.val() - 9);
-      }
+
 
       // create custom level
       self.createCustomLevel($customRows.val(), $customColumns.val(), $customMines.val());
