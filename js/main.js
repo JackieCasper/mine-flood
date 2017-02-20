@@ -396,11 +396,41 @@ var boardFactory = function (rows, columns, bombs) {
 
       // handle game loss
       handleLoss: function () {
+        var $overlay = $('.overlay');
+
+        var $lossContent = $('<div class="win-content">');
+        var $lossHead = $('<h3>');
+
+        var $lossControls = $('<div class="win-controls">');
+
+        var $levels = $('<div class="win-control" id="win-levels">');
+
+        var $reload = $('<div class="win-control" id="win-reload">');
+
         // pause timer
         game.currentLevel.timer.pause;
-        alert('You Lose');
-        // go back to level choice
-        game.generateLevelChoice();
+
+        $lossHead.text(`You Lose, ${game.playerName}!`);
+        $lossContent.append($lossHead);
+
+        $levels.html('&#x2630;');
+        $levels.one('click', function () {
+          game.generateLevelChoice();
+        });
+
+        $reload.one('click', function () {
+          $overlay.fadeOut('fast');
+          $overlay.children().remove();
+
+          game.currentLevel.board.clear();
+          game.currentLevel.renderLevel();
+        });
+
+        $lossControls.append($levels, $reload);
+        $lossContent.append($lossControls);
+        $overlay.append($lossContent);
+        $overlay.fadeIn('fast');
+
       },
 
       // function used to skip the playing process
@@ -461,7 +491,7 @@ var boardFactory = function (rows, columns, bombs) {
 
 
 
-          $winHead.text('You Win!');
+          $winHead.text(`You Win, ${game.playerName}!`);
           $winContent.append($winHead);
 
           $winScore.text(game.currentLevel.timer.getFormatted());
@@ -1090,6 +1120,7 @@ var game = {
   loadSave: function () {
     // get and parse the local storage
     var savedLevels = JSON.parse(localStorage.getItem('levels'));
+    var savedPlayer = localStorage.getItem('playerName');
     // if there was anything saved
     if (savedLevels) {
       var self = this;
@@ -1098,6 +1129,11 @@ var game = {
         // set the level's high score
         self.levels[level.index].highScore = level.highScore;
       });
+    }
+    if (savedPlayer) {
+      game.playerName = savedPlayer;
+    } else {
+      window.location.href = 'index.html';
     }
   },
 

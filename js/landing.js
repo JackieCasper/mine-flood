@@ -1,7 +1,4 @@
 $(function () {
-  $('#landing-play').click(function () {
-    window.location.href = 'play.html';
-  });
 
   var i = 0;
 
@@ -18,6 +15,16 @@ $(function () {
       backgroundImage: `url(img/colorflow/${i}.png)`
     });
     incrementI();
-  }, 1000)
-
-})
+  }, 1000);
+  
+  
+  $('#landing-play').click(function(){
+    var playerName = $('#landing-name').val();
+    if(playerName){
+      localStorage.setItem('playerName', playerName);
+      window.location.href = 'play.html';
+    } else {
+      alert('Please Enter Your Name!');
+    }
+  })
+}) 
