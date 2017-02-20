@@ -1100,6 +1100,7 @@ var game = {
       $input.unbind('change');
       // on change
       $input.change(function () {
+
         // check the input
         self.checkCustomInput($input);
       });
@@ -1109,11 +1110,16 @@ var game = {
     $customSubmit.unbind('click');
     // on click
     $customSubmit.click(function () {
+
       // for each input
       customInputs.forEach(function ($input) {
         // check the input value
         self.checkCustomInput($input);
       });
+      if ($customMines.val() > ($customColumns.val() * $customRows.val()) - 9) {
+        $customMines.val($customColumns.val() * $customRows.val() - 9);
+      }
+
       // create custom level
       self.createCustomLevel($customRows.val(), $customColumns.val(), $customMines.val());
     });
