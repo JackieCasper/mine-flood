@@ -134,6 +134,7 @@ var tileFactory = function (row, column) {
       color: '',
 
       // tile methods
+
       // function to get surrounding tiles
       getSurrounding: function () {
         // difine row and column in scope
@@ -766,10 +767,16 @@ function Level(index, rows, cols, bombs) {
   // function to render the level
   this.renderLevel = function () {
     var self = this;
-    // hide the level choices
+    var subheadText = 'Level: '
+      // hide the level choices
     $('.levels').fadeOut('fast', function () {
       // change the subhead text to the current level
-      $('.sub-head').text('Level: ' + (self.index + self.index !== 'Custom' ? self.index : ''));
+      if (self.index !== 'Custom') {
+        subheadText += (self.index + 1);
+      } else {
+        subheadText += 'Custom';
+      }
+      $('.sub-head').text(subheadText);
       // hide the board now so it can fade in later
       $(self.board).hide();
       // append the board to the container
@@ -1128,7 +1135,7 @@ var game = {
 
 
       // if there is a high score
-      if (level.highScore > 0 || level.index === 0) {
+      if (level.highScore > 0 || level.index === 0 || self.levels[level.index - 1].highScore) {
         // add event listener for when level is clicked
         $levelContainer.click(function () {
           // set the current level
@@ -1148,9 +1155,12 @@ var game = {
           $levelContainer.append($score);
         }
 
+
       } else {
         $levelContainer.addClass('not-played');
       }
+
+
       // set the background color 
       $levelContainer.css('background-color', levelColor);
 
