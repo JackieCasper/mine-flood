@@ -1,15 +1,13 @@
-# Project-One -- Minesweeper
+# Project-One -- Mine Flood
 First project for WDI - Create a game
 
 ## Rules
 
-The objective in Minesweeper is to find and mark all the mines hidden under the grey squares, in the shortest time possible. This is done by clicking on the squares to open them. Each square will have one of the following:
-- A mine, and if you click on it you'll lose the game.
-- A number, which tells you how many of its adjacent squares have mines in them.
-- Nothing. In this case you know that none of the adjacent squares have mines, and they will be automatically opened as well.
+### Mine
+Click tiles to reveal what is under them, but don't click on a mine! If a number is uncovered, it indicates how many mines are around that tile. Empty spaces mean there are no mines near by, and will uncover its neighboring tiles until it reaches those that have mines near them. Mark tiles by right clicking or using the flag button to keep track of where the mines are. Win by uncovering all tiles other than the mines!
 
-\- Rules taken from: https://cardgames.io/minesweeper/
-I will develop my own wording for the project
+### Flood
+Fill the board with a single color in the given amount of turns. Starting in the upper left corner, change the color of the tiles to match its neighbors by clicking on the matching color box under the board. Each turn, the matching tiles are added to the play area until the board is flooded.
 
 ## Obsticles
 
