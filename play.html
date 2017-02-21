@@ -14,37 +14,46 @@
   <header>
     <h1>MINE FLOOD</h1>
     <h2 class="sub-head"></h3>
-    
  </header>
- <div class="game-controls">
-     <p id="counter" class="game-control"></p>
-     <div id="mark-flag" class="game-control"></div>
-      <p id="timer" class="game-control"></p>
-    </div>
+ 
+   <!-- Controls over the board -->
+  <div class="game-controls">
+    <p id="counter" class="game-control"></p>
+    <div id="mark-flag" class="game-control"></div>
+    <p id="timer" class="game-control"></p>
+  </div>
+  
+  <!--   Main Container -->
   <div class="container">
+     <!-- Levels Container -->
+    <div class="levels"></div>
     
-    <div class="levels">
-      
-    </div>
+    <!-- Custom Levels Container -->
     <div class="custom-level-container">
-       <div class="custom-controls">
+      <div class="custom-controls">
         <div class="custom-level-control">
           <label class="custom-level-label" for="custom-rows">Rows:</label>
           <input type="number" min="8" max="30" value="10" id="custom-rows" name="custom-rows">
         </div>
+        
         <div class="custom-level-control">
           <label class="custom-level-label" for="custom-columns">Columns:</label>
           <input type="number" min="8" max="30" value="10" id="custom-columns" name="custom-columns">
         </div>
-         <div class="custom-level-control">
+        
+        <div class="custom-level-control">
           <label class="custom-level-label" for="custom-mines">Mines:</label>
           <input type="number" min="10" max="891" value="15" id="custom-mines" name="custom-mines">
         </div>
-        </div>
-         <div id="custom-level-submit">Play Custom Level</div>
+        
       </div>
+      
+      <div id="custom-level-submit">Play Custom Level</div>
+    </div>
+    
   </div>
  
+   <!-- Color Flood Controls -->
   <footer>
     <div class="bottom-controls">
       <div class="color-choice"></div>
@@ -54,17 +63,35 @@
       <div class="color-choice"></div>
     </div>
   </footer>
+  
+  <!-- Navigation Bar -->
   <nav>
-    <div class="nav-button" id="levels"><p></p></div>
-    <div class="nav-button" id="pause"><p>||</p></div>
-    <div class="nav-button" id="reload"><p></p></div>
-    <div class="nav-button" id="help"><p>?</p></div>
-    <div class="nav-button" id="skip"><p>&#x27A0;</p></div> 
+    <div class="nav-button" id="levels">
+      <p></p>
+    </div>
+    
+    <div class="nav-button" id="pause">
+      <p>||</p>
+    </div>
+    
+    <div class="nav-button" id="reload">
+      <p></p>
+    </div>
+    
+    <div class="nav-button" id="help">
+      <p>?</p>
+    </div>
+    
+    <div class="nav-button" id="skip">
+      <p>&#x27A0;</p>
+    </div> 
   </nav>
-  <div class="overlay scroll">
- 
-  </div>
+  
+  <!-- Overlay -->
+  <div class="overlay scroll"></div>
+  
 </body>
+
 <script src="js/jquery.js"></script>
 <script src="js/main.js"></script>
 

@@ -1,3 +1,20 @@
+///////////////////////////////////////
+//    __             _    _          //
+//    \ \  __ _  ___| | _(_) ___     //
+//     \ \/ _` |/ __| |/ / |/ _ \    //
+//  /\_/ / (_| | (__|   <| |  __/    //
+//  \___/ \__,_|\___|_|\_\_|\___|    //
+//                                   //
+//    ___                            //
+//   / __\__ _ ___ _ __   ___ _ __   //
+//  / /  / _` / __| '_ \ / _ \ '__|  //
+// / /__| (_| \__ \ |_) |  __/ |     //
+// \____/\__,_|___/ .__/ \___|_|     //
+//                |_|                //
+//                                   //
+///////////////////////////////////////
+
+
 //Pseudo Code
 //I want more practice with objects so I'm going to create the following objects
 
@@ -396,35 +413,38 @@ var boardFactory = function (rows, columns, bombs) {
 
       // handle game loss
       handleLoss: function () {
+        // define vars / create elements
         var $overlay = $('.overlay');
-
         var $lossContent = $('<div class="win-content">');
         var $lossHead = $('<h3>');
-
         var $lossControls = $('<div class="win-controls">');
-
         var $levels = $('<div class="win-control" id="win-levels">');
-
         var $reload = $('<div class="win-control" id="win-reload">');
 
         // pause timer
         game.currentLevel.timer.pause;
 
+        // head stuff
         $lossHead.text(`You Lose, ${game.playerName}!`);
         $lossContent.append($lossHead);
 
+        // level click handler
         $levels.one('click', function () {
           game.generateLevelChoice();
         });
 
+        // reload click handler
         $reload.one('click', function () {
+          // fade out overlay
           $overlay.fadeOut('fast');
           $overlay.children().remove();
 
+          // clear and render board
           game.currentLevel.board.clear();
           game.currentLevel.renderLevel();
         });
 
+        // add to overlay and fade in
         $lossControls.append($levels, $reload);
         $lossContent.append($lossControls);
         $overlay.addClass('transparent').append($lossContent).fadeIn('fast');
@@ -434,22 +454,32 @@ var boardFactory = function (rows, columns, bombs) {
       // function used to skip the playing process
       // used for development
       triggerWin() {
+        // if its color flood
         if (this.flood) {
+          // define fars
           var tilesToAdd = this.tiles;
           var color = this.floodTiles[0].color;
           var self = this;
+
+          // for each flood tile -- getting all of the tiles that aren't in the flood tiles already
           this.floodTiles.forEach(function (floodTile) {
+            // take it out of the tiles
             tilesToAdd.filter(function (tile) {
               return tile.column !== floodTile.column || tile.row !== floodTile.row;
             });
           });
 
+          // for each tile to add
           tilesToAdd.forEach(function (tileToAdd) {
+            // change the color
             tileToAdd.color = color;
             $(tileToAdd).css('background-color', color);
+            // set it to activated
             tileToAdd.activated = true;
+            // add to the flood tiles
             self.floodTiles.push(tileToAdd);
           });
+          // click on any of the color choices
           $('.color-choice').first().click();
         } else {
           // basically click each tile that isn't a bomb
@@ -465,64 +495,74 @@ var boardFactory = function (rows, columns, bombs) {
       handleWin: function () {
         // if it is color flood
         if (this.flood) {
+          // define vars / create elements
           var $overlay = $('.overlay');
-
           var $winContent = $('<div class="win-content">');
-          var $winHead = $('<h3>');
 
+          var $winHead = $('<h3>');
           var $winScore = $('<p class="win-score">');
           var $highScore = $('<p class="win-high-score">');
 
           var $winControls = $('<div class="win-controls">');
-
           var $levels = $('<div class="win-control" id="win-levels">');
-
-
           var $reload = $('<div class="win-control" id="win-reload">');
-
           var $nextLevel = $('<div class="win-control" id="win-next-level">');
 
           var timer = new Timer();
 
           // pause the game
-          game.currentLevel.timer.pause;
+          game.currentLevel.timer.pause();
 
-
-
+          // header stuff
           $winHead.text(`You Win, ${game.playerName}!`);
           $winContent.append($winHead);
 
+          // score stuff
           $winScore.text(game.currentLevel.timer.getFormatted());
           $winContent.append($winScore);
 
+          // click event for levels
           $levels.one('click', function () {
             game.generateLevelChoice();
           });
 
+          // click event for reload
           $reload.one('click', function () {
+            // fade out overlay
             $overlay.fadeOut('fast');
             $overlay.children().remove();
-
+            //restart game
             game.currentLevel.board.clear();
             game.currentLevel.renderLevel();
           })
 
+          // append controls
           $winControls.append($levels, $reload);
 
+          // if its not a custom game or the last level
           if (game.currentLevel.index < game.levels.length && game.currentLevel.index !== 'Custom') {
+            // set up next level button
             $nextLevel.html('&#x21e8;');
+            //add click handler
             $nextLevel.one('click', function () {
               var nextLevel = game.levels[game.currentLevel.index + 1];
+              // reset current level
               game.currentLevel.resetLevel();
+              // set current level to next level
               game.currentLevel = nextLevel;
+              // render it
               nextLevel.renderLevel();
+              // fade out overlay
               $overlay.fadeOut('fast');
               $overlay.children().remove();
             });
+            // add to controls
             $winControls.append($nextLevel);
           }
 
+          // account for skipped levels
           if (game.currentLevel.skipped) {
+            // create win message
             var $winMessage = $('<p class="win-message">');
             $winMessage.text('You skipped a part! No score recorded');
             $winContent.append($winMessage);
@@ -532,17 +572,22 @@ var boardFactory = function (rows, columns, bombs) {
             // save high score
             game.save();
           }
+          // if its not a custom game
           if (game.currentLevel.index !== 'Custom') {
             // if it is a high score
             if ((game.currentLevel.timer.time < game.currentLevel.highScore || !game.currentLevel.highScore) && !game.currentLevel.skipped) {
+              // create win message
               var $winMessage = $('<p class="win-message">');
               $winMessage.text('New Record!');
               $winContent.append($winMessage);
             }
 
+            // set high score stuff
             $highScore.text(timer.getFormatted(game.currentLevel.highScore));
             $winContent.append($highScore);
           }
+
+          // append and fade
           $winContent.append($winControls);
           $overlay.addClass('transparent').append($winContent).fadeIn('fast');
 
@@ -840,8 +885,10 @@ function Level(index, rows, cols, bombs) {
       $($colorChoice).fadeIn('fast');
     });
   }
-  this.openPauseScreen = function () {
 
+  // function to open pause screen
+  this.openPauseScreen = function () {
+    // define vars / create elements
     var $overlay = $('.overlay');
     var $pauseScreen = $('<div class="pause-screen">');
     var $pauseHead = $('<h1>');
@@ -850,19 +897,24 @@ function Level(index, rows, cols, bombs) {
     var $resume = $('<div class="resume">');
     var self = this;
 
+    // pause the game
     this.timer.pause();
 
+    // set text
     $pauseHead.text('MINE FLOW');
     $pauseSubHead.text($('header>.sub-head').text());
 
     $pausePause.text('||');
 
     $resume.text('Resume');
+
+    // add click event listener
     $resume.one('click', function () {
       $overlay.fadeOut('fast').children().remove();
       self.timer.start();
     });
 
+    //append and fade
     $pauseScreen.append($pauseHead, $pauseSubHead, $pausePause, $resume);
     $overlay.removeClass('transparent').append($pauseScreen).fadeIn('fast');
   }
@@ -1200,7 +1252,10 @@ var game = {
       this.currentLevel.board.size();
     }
   },
+
+  //function to open help menu
   openHelp: function () {
+    // dfine vars / make elements
     var $overlay = $('.overlay');
     var $helpContent = $('<div class="help-content">');
     var $helpH1 = $('<h1>');
@@ -1213,23 +1268,26 @@ var game = {
     var $helpClose = $('<div class="close-help" id="close-help">');
     var self = this;
 
+    // if there is a level going, pause it
     if (this.currentLevel) {
       this.currentLevel.timer.pause();
     }
 
+    // set text content of stuff
     $helpH1.text('MINE FLOOD');
 
     $helpMine.text('Mine');
     $mineText.text('Click tiles to reveal what is under them, but don\'t click on a mine! If a number is uncovered, ' +
-      'it indicates how many mines are around that tile. Empty spaces mean there are no mines near by and will uncover its ' +
+      'it indicates how many mines are around that tile. Empty spaces mean there are no mines near by, and will uncover its ' +
       'neighboring tiles until it reaches those that have mines near them. Mark tiles by right clicking or using the flag button to ' +
       'keep track of where the mines are. Win by uncovering all tiles other than the mines!');
 
     $helpFlood.text('Flood');
     $floodText.text('Fill the board with a single color in the given amount of turns. Starting in the upper left corner, change the color ' +
-      'of the tiles to match its neighbors by clicking on the matching color boxe under the board. Each turn, the matching tiles are ' +
+      'of the tiles to match its neighbors by clicking on the matching color box under the board. Each turn, the matching tiles are ' +
       'added to the play area until the board is flooded.');
 
+    // set event listener for close button
     $helpClose.click(function () {
       $overlay.fadeOut('fast').children().remove();
       if (self.currentLevel) {
@@ -1237,7 +1295,9 @@ var game = {
       }
     })
 
+    // append to help content
     $helpContent.append($helpH1, $helpMine, $mineImg, $mineText, $helpFlood, $floodImg, $floodText, $helpClose);
+    // append and fade overlay
     $overlay.removeClass('transparent').append($helpContent).fadeIn('fast');
   }
 }
@@ -1252,19 +1312,23 @@ $(function () {
     game.size();
   });
 
+  // set event listener for levels nav button
   $('#levels').click(function () {
     game.generateLevelChoice();
   });
 
+  // set event listener for pause nav button
   $('#pause').click(function () {
     game.currentLevel.openPauseScreen();
   });
 
+  // set event listener for reload nav button
   $('#reload').click(function () {
     game.currentLevel.board.clear();
     game.currentLevel.renderLevel();
   });
 
+  // set event listener for skip nav button
   $('#skip').click(function () {
     game.currentLevel.skipped = true;
     game.currentLevel.board.triggerWin();

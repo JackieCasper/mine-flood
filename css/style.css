@@ -660,12 +660,12 @@ body.landing {
   padding: 10px;
 }
 
-h1.landing-header {
+.landing-header {
   font-size: 4em;
   text-align: center;
 }
 
-p.landing-blurb {
+.landing-blurb {
   font-size: 1.5em;
   margin: 20px auto;
   text-align: center;
@@ -688,7 +688,7 @@ input#landing-name {
   text-align: center;
 }
 
-div.landing-play {
+.landing-play {
   -moz-align-items: center;
   -moz-justify-content: center;
   -webkit-align-items: center;
@@ -747,10 +747,10 @@ div.landing-play {
 }
 
 @media screen and (max-width: 600px) {
-  h1.landing-header {
+  .landing-header {
     font-size: 3em;
   }
-  p.landing-blurb {
+  .landing-blurb {
     font-size: 1.3em;
   }
   header {
