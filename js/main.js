@@ -150,6 +150,9 @@ var tileFactory = function (row, column) {
 
       // function to activate tile
       activate: function () {
+        if (this.marked) {
+          this.toggleMarked();
+        }
         // if it is a bomb
         if (this.value === '') {
           // handle loss
@@ -483,6 +486,9 @@ var boardFactory = function (rows, columns, bombs) {
           // click on any of the color choices
           $('.color-choice').first().click();
         } else {
+          if (this.marking) {
+            this.toggleMarking();
+          }
           // basically click each tile that isn't a bomb
           this.tiles.forEach(function (tile) {
             if (!tile.activated && tile.value !== '') {
@@ -908,7 +914,7 @@ function Level(index, rows, cols, bombs) {
     this.timer.pause();
 
     // set text
-    $pauseHead.text('MINE FLOW');
+    $pauseHead.text('MINE FLOOD');
     $pauseSubHead.text($('header>.sub-head').text());
 
     $pausePause.text('||');
