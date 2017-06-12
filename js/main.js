@@ -256,6 +256,8 @@ var tileFactory = function (row, column) {
         // set tile's color
         this.color = changeColor;
         $(this).addClass('active-flood').css('background-color', this.color);
+        $(this).addClass('active-flood').css('border-color', this.color);
+
 
         // check surrounding tiles and look for groups of colors
         // get surrounding tiles
@@ -328,6 +330,8 @@ var tileFactory = function (row, column) {
         setTimeout(function () {
           // change the background color
           $(self).css('background-color', self.color);
+          $(self).css('border-color', self.color);
+
           // remove classes that have to do with mine sweeper
           $(self).removeClass(`marked active active-${self.value}`).addClass('color-flood');
           // remove text
@@ -477,7 +481,7 @@ var boardFactory = function (rows, columns, bombs) {
           tilesToAdd.forEach(function (tileToAdd) {
             // change the color
             tileToAdd.color = color;
-            $(tileToAdd).css('background-color', color);
+            $(tileToAdd).css('background-color', color).css('border-color', color);
             // set it to activated
             tileToAdd.activated = true;
             // add to the flood tiles
@@ -863,6 +867,8 @@ function Level(index, rows, cols, bombs) {
 
       // change the background color to one of the colors that isn't the first color
       $($colorChoice).css('background-color', colors[i]);
+      $($colorChoice).css('border-color', colors[i]);
+
 
       // add click event
       $($colorChoice).click(function () {

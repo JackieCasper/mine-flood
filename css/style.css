@@ -208,6 +208,11 @@ hr {
   flex-flow: row wrap;
   justify-content: center;
   margin: 0 auto 50px;
+  -webkit-align-content: center;
+  -moz-align-content: center;
+  -ms-align-content: center;
+  -o-align-content: center;
+  align-content: center;
 }
 
 .game-tile {
@@ -235,7 +240,6 @@ hr {
 .game-tile.color-flood {
   -o-transition: background-color .5s ease;
   -webkit-transition: background-color .5s ease;
-  border: 0 solid transparent;
   transition: background-color .5s ease;
 }
 
