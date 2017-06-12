@@ -18,7 +18,7 @@
 //Pseudo Code
 //I want more practice with objects so I'm going to create the following objects
 
-//Board 
+//Board
 //  Tiles
 //  Clear()
 //  Render()
@@ -71,7 +71,7 @@ Don't click on a mine
 Click tiles to reveil what is under them
 if you uncover a number, it indicates how many mines are around that tile
 an empty space will uncover its neighbors until it reaches tiles that have mines near them
-mark mines by right clicking or using the flag button to keep track of where the bombs are 
+mark mines by right clicking or using the flag button to keep track of where the bombs are
 the first tile you uncover will always be an empty space
 you win once all the non-mine tiles are uncovered
 
@@ -79,7 +79,7 @@ COLOR FLOOD
 
 fill the board with a single color in the amount of turns given
 starting in the upper left corner, change the color of the tiles to match its neighbors
-each turn, the matching tiles are added to the play area until the board is flooded 
+each turn, the matching tiles are added to the play area until the board is flooded
 
 
 PAUSE SCREEN
@@ -208,7 +208,7 @@ var tileFactory = function (row, column) {
 
       // function to render tile
       render: function () {
-        // if it is activated 
+        // if it is activated
         if (this.activated) {
           // if there are bombs around it
           if (this.value !== 0) {
@@ -361,7 +361,7 @@ var tileFactory = function (row, column) {
       return false;
     });
 
-    // add click event handler 
+    // add click event handler
     $(tile).click(function () {
       // if not currently marking
       if (!board.marking) {
@@ -714,7 +714,7 @@ var boardFactory = function (rows, columns, bombs) {
         var size = (vpw / this.columnAmount) > (vph / this.rowAmount) ? ((vph / 10) * 8) / this.rowAmount : ((vpw / 10) * 8) / this.columnAmount;
 
         //set size of board
-        $(this).width((size + 2) * this.columnAmount).height((size + 2) * this.rowAmount);
+        $(this).width((size + 3) * this.columnAmount).height((size + 3) * this.rowAmount);
 
 
         // set size of tiles
@@ -871,7 +871,7 @@ function Level(index, rows, cols, bombs) {
         $('#counter').text(`Turns: ${board.floodTurns}/${board.floodTotalTurns}`);
 
 
-        // get color of clicked 
+        // get color of clicked
         changeColor = $(this).css('background-color');
         // get last clicked color
         lastColor = board.getTile(0, 0).color;
@@ -949,7 +949,7 @@ function Timer() {
       var self = this;
       // set it to running
       this.running = true;
-      // set interval 
+      // set interval
       this.interval = setInterval(function () {
         // increment the timer
         self.increment();
@@ -1068,7 +1068,7 @@ var game = {
       val = maxMines;
     }
 
-    // set the value 
+    // set the value
     $input.val(val);
   },
 
@@ -1167,7 +1167,7 @@ var game = {
       }
 
 
-      // set the background color 
+      // set the background color
       $levelContainer.css('background-color', levelColor);
 
       // add container to holder
