@@ -718,7 +718,7 @@ var boardFactory = function (rows, columns, bombs) {
         var size = (vpw / this.columnAmount) > (vph / this.rowAmount) ? ((vph / 10) * 8) / this.rowAmount : ((vpw / 10) * 8) / this.columnAmount;
 
         //set size of board
-        $(this).width((size + 2.3) * this.columnAmount).height((size + 2) * this.rowAmount);
+        $(this).width((size + 2.3) * this.columnAmount).height((size + 2.3) * this.rowAmount);
 
 
         // set size of tiles
